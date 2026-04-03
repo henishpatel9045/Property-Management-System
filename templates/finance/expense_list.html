@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Property Expenses</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'expense_create' %}" class="btn btn-sm btn-info text-white shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> Log New Expense
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary small text-uppercase">
+                            <tr>
+                                <th class="ps-4 py-3">Date</th>
+                                <th class="py-3">Property</th>
+                                <th class="py-3">Category</th>
+                                <th class="py-3">Amount</th>
+                                <th class="py-3">Payer</th>
+                                <th class="py-3 text-center">Bond Deductible?</th>
+                                <th class="py-3 text-end pe-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in expenses %}
+                            <tr>
+                                <td class="ps-4 text-muted">{{ expense.date_incurred|date:"M d, Y" }}</td>
+                                <td class="fw-medium">{{ expense.property.name }}</td>
+                                <td>
+                                    {{ expense.category }}
+                                    <div class="small text-muted text-truncate" style="max-width: 200px;">
+                                        {{ expense.description }}
+                                    </div>
+                                </td>
+                                <td class="fw-bold">${{ expense.amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if expense.payer == 'owner' %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-3">Owner</span>
+                                    {% elif expense.payer == 'tenant' %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle rounded-pill px-3">Tenant</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-3">Shared</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if expense.deduct_from_bond %}
+                                    <i class="bi bi-check-circle-fill text-danger fs-5" title="Will be deducted from bond at lease end"></i>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    {% if expense.is_paid %}
+                                    <i class="bi bi-check2-all text-success fs-5" title="Paid"></i>
+                                    {% else %}
+                                    <i class="bi bi-hourglass-split text-warning fs-5" title="Unpaid"></i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="py-5">
+                                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                            <i class="bi bi-receipt fs-1 text-secondary opacity-50"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-dark mb-1">No Expenses Listed</h5>
+                                        <p class="text-muted d-block mx-auto" style="max-width: 300px;">Keep track of maintenance and repairs easily. Start by logging your first property expense.</p>
+                                        <a href="{% url 'expense_create' %}" class="btn btn-outline-info rounded-pill px-4 mt-2">Log Expense</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

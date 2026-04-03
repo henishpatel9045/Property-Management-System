@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 mb-0">Lease for {{ lease.property.name }}</h1>
+        <p class="text-muted">Tenant: {{ lease.tenant }}</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'lease_settlement' lease.id %}" class="btn btn-sm btn-outline-success me-2">
+            <i class="bi bi-calculator me-1"></i> Settlement
+        </a>
+        <a href="{% url 'lease_update' lease.id %}" class="btn btn-sm btn-primary me-2">
+            <i class="bi bi-pencil me-1"></i> Edit Lease
+        </a>
+        <a href="{% url 'lease_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Leases
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white pb-0 border-0 pt-4">
+                <h5 class="mb-0">Financial Terms</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Rent Amount</dt>
+                    <dd class="col-sm-8">${{ lease.rent_amount|floatformat:2 }} ({{ lease.get_rent_frequency_display }})</dd>
+                    
+                    <dt class="col-sm-4 text-muted">Bond/Deposit</dt>
+                    <dd class="col-sm-8">${{ lease.bond_required|floatformat:2 }}</dd>
+                    
+                    <dt class="col-sm-4 text-muted">Due Day</dt>
+                    <dd class="col-sm-8">{{ lease.due_day|default:"N/A" }}</dd>
+                    
+                    <dt class="col-sm-4 text-muted">Grace Period</dt>
+                    <dd class="col-sm-8">{{ lease.grace_period_days }} days</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white pb-0 border-0 pt-4">
+                <h5 class="mb-0">Contract Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Start Date</dt>
+                    <dd class="col-sm-8">{{ lease.start_date|date:"M d, Y" }}</dd>
+                    
+                    <dt class="col-sm-4 text-muted">End Date</dt>
+                    <dd class="col-sm-8">{{ lease.end_date|date:"M d, Y" }}</dd>
+                    
+                    <dt class="col-sm-4 text-muted">Status</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-secondary">{{ lease.get_status_display }}</span>
+                    </dd>
+                    
+                    <dt class="col-sm-4 text-muted">Terms</dt>
+                    <dd class="col-sm-8">{{ lease.terms|default:"—" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

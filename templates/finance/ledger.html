@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Financial Ledger</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'export_ledger_excel' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-download me-1"></i> Export Excel
+        </a>
+        <a href="{% url 'expense_list' %}" class="btn btn-sm btn-outline-info ms-2">
+            <i class="bi bi-receipt me-1"></i> Expenses
+        </a>
+        <a href="{% url 'payment_create' %}" class="btn btn-sm btn-primary ms-2">
+            <i class="bi bi-plus-circle me-1"></i> Record Payment
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Due Date</th>
+                        <th>Property</th>
+                        <th>Tenant</th>
+                        <th>Expected</th>
+                        <th>Paid</th>
+                        <th>Outstanding</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for obs in obligations %}
+                    <tr>
+                        <td class="ps-4">{{ obs.due_date|date:"M d, Y" }}</td>
+                        <td class="fw-medium">{{ obs.lease.property.name }}</td>
+                        <td>{{ obs.lease.tenant.first_name }} {{ obs.lease.tenant.last_name }}</td>
+                        <td>${{ obs.expected_amount|floatformat:2 }}</td>
+                        <td>${{ obs.amount_paid|floatformat:2 }}</td>
+                        <td class="{% if obs.outstanding_amount > 0 %}text-danger fw-bold{% endif %}">
+                            ${{ obs.outstanding_amount|floatformat:2 }}
+                        </td>
+                        <td>
+                            {% if obs.status == 'unpaid' %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger">Unpaid</span>
+                            {% elif obs.status == 'partial' %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning">Partial</span>
+                            {% elif obs.status == 'paid' %}
+                            <span class="badge bg-success bg-opacity-10 text-success">Paid</span>
+                            {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ obs.get_status_display
+                                }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if obs.status in 'unpaid partial adjusted' %}
+                            <a href="{% url 'obligation_adjust' obs.pk %}" class="btn btn-sm btn-outline-warning"
+                                title="Adjust Expected Rent">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            {% endif %}
+                            <a href="#" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-journal-text fs-1 d-block mb-3 text-secondary opacity-50"></i>
+                            <h5 class="fw-normal">No financials found</h5>
+                            <p>You have no rent obligations logged.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

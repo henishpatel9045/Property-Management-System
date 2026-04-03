@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Properties</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'property_create' %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Add Property
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Name</th>
+                        <th>Address</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for property in properties %}
+                    <tr>
+                        <td class="ps-4 fw-medium">{{ property.name }}</td>
+                        <td>{{ property.address }}</td>
+                        <td>{{ property.property_type|default:"—" }}</td>
+                        <td>
+                            {% if property.is_active %}
+                            <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'property_detail' property.id %}" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+                            <a href="{% url 'property_update' property.id %}" class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-building fs-1 d-block mb-3 text-secondary opacity-50"></i>
+                            <h5 class="fw-normal">No properties found</h5>
+                            <p>You haven't added any properties yet.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2">Lease End Settlement</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'ledger' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Ledger
+        </a>
+        <button onclick="window.print()" class="btn btn-sm btn-primary ms-2 shadow-sm">
+            <i class="bi bi-printer me-1"></i> Print Statement
+        </button>
+    </div>
+</div>
+
+<div class="row gx-lg-5">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+            <div class="card-header bg-white pt-4 pb-3 border-bottom-0">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                        <i class="bi bi-building fs-3 text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-1 fw-bold">{{ lease.property.name }}</h4>
+                        <p class="text-muted mb-0">{{ lease.tenant.first_name }} {{ lease.tenant.last_name }} <span class="mx-2">•</span> {{ lease.start_date|date:"M Y" }} - {{ lease.end_date|date:"M Y" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body px-5 pb-5">
+                <hr class="text-secondary opacity-25 mb-4">
+                
+                <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-bank me-2 text-info"></i> Bond Held</h5>
+                <div class="d-flex justify-content-between align-items-center bg-light rounded-3 p-3 mb-4">
+                    <span class="fs-5 text-secondary">Initial Bond Received</span>
+                    <span class="fs-4 fw-bold text-dark">${{ initial_bond|floatformat:2 }}</span>
+                </div>
+
+                {% if total_arrears > 0 %}
+                <h5 class="fw-bold mb-3 text-danger mt-5"><i class="bi bi-exclamation-triangle-fill me-2"></i> Unpaid Rent Deductions</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-borderless table-sm small">
+                        <tbody>
+                            {% for obs in unpaid_obligations %}
+                            <tr>
+                                <td class="text-muted ps-0">Due: {{ obs.due_date|date:"M d, Y" }} <span class="badge bg-secondary ms-2 opacity-50">{{ obs.get_status_display }}</span></td>
+                                <td class="text-end text-danger fw-medium">-${{ obs.outstanding_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="border-top">
+                                <td class="ps-0 pt-2 fw-bold text-dark">Total Arrears Deduction</td>
+                                <td class="text-end pt-2 text-danger fw-bold fs-6">-${{ total_arrears|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+                {% if total_deductions > 0 %}
+                <h5 class="fw-bold mb-3 text-danger mt-5"><i class="bi bi-tools me-2"></i> Property Damage & Expense Deductions</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-borderless table-sm small">
+                        <tbody>
+                            {% for exp in deductible_expenses %}
+                            <tr>
+                                <td class="text-muted ps-0">{{ exp.category }} - {{ exp.description }} <span class="text-muted opacity-50 ms-2">({{ exp.date_incurred|date:"d/m/y" }})</span></td>
+                                <td class="text-end text-danger fw-medium">-${{ exp.amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="border-top">
+                                <td class="ps-0 pt-2 fw-bold text-dark">Total Damage/Expense Deduction</td>
+                                <td class="text-end pt-2 text-danger fw-bold fs-6">-${{ total_deductions|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 position-sticky top-0 sticky-offset" style="top: 2rem;">
+            <div class="bg-primary p-4 text-white text-center">
+                <i class="bi bi-calculator fs-1 mb-2 opacity-75"></i>
+                <h5 class="fw-bold mb-0">Final Settlement</h5>
+                <p class="small opacity-75 mb-0">Calculated Summary</p>
+            </div>
+            
+            <div class="card-body p-4 bg-light">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total Bond</span>
+                    <span class="fw-medium">${{ initial_bond|floatformat:2 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-danger">Total Deductions</span>
+                    <span class="text-danger fw-medium">-${{ total_arrears|add:total_deductions|floatformat:2 }}</span>
+                </div>
+                
+                <hr class="my-3 border-secondary opacity-25">
+                
+                <div class="d-flex justify-content-between align-items-end mb-4">
+                    {% if final_balance >= 0 %}
+                    <span class="fw-bold text-dark fs-5">Amount to Return</span>
+                    <span class="fw-bold text-success display-6">${{ final_balance|floatformat:2 }}</span>
+                    {% else %}
+                    <span class="fw-bold text-dark fs-5">Tenant Debt Due</span>
+                    <span class="fw-bold text-danger display-6">${{ final_balance|stringformat:"f"|slice:"1:" }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-dark rounded-pill py-2 fw-bold shadow-sm">Finalize Settlement</button>
+                    <button class="btn btn-outline-secondary rounded-pill py-2 fw-bold">Email to Tenant</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

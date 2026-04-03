@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Tenants</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'tenant_create' %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-person-plus me-1"></i> Add Tenant
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tenant in tenants %}
+                    <tr>
+                        <td class="ps-4 fw-medium">{{ tenant.first_name }} {{ tenant.last_name }}</td>
+                        <td>{{ tenant.email|default:"—" }}</td>
+                        <td>{{ tenant.phone_number|default:"—" }}</td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'tenant_detail' tenant.id %}" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+                            <a href="{% url 'tenant_update' tenant.id %}" class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="bi bi-people fs-1 d-block mb-3 text-secondary opacity-50"></i>
+                            <h5 class="fw-normal">No tenants found</h5>
+                            <p>You haven't added any tenants yet.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
