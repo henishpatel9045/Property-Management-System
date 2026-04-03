@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from .models import Property, Tenant, Lease
 from .forms import PropertyForm, TenantForm, LeaseForm
-from finance.models import Expense, RentObligation
+from finance.models import FinancialRecord, RentObligation
 from django.db.models import Sum
 
 # --- Property Views ---
@@ -29,9 +29,10 @@ class PropertyDetailView(LoginRequiredMixin, DetailView):
         property_obj = self.get_object()
         
         # Financials for this property
-        expenses = Expense.objects.filter(property=property_obj)
-        context['total_expenses'] = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
-        context['unpaid_expenses'] = expenses.filter(is_paid=False).count()
+        financial_records = FinancialRecord.objects.filter(property=property_obj)
+        context['total_income'] = financial_records.filter(transaction_type='incoming').aggregate(Sum('amount'))['amount__sum'] or 0
+        context['total_expenses'] = financial_records.filter(transaction_type='outgoing').aggregate(Sum('amount'))['amount__sum'] or 0
+        context['unpaid_expenses'] = financial_records.filter(transaction_type='outgoing', is_paid=False).count()
         
         obligations = RentObligation.objects.filter(lease__property=property_obj, status__in=['unpaid', 'partial', 'adjusted'])
         context['total_arrears'] = sum(obs.outstanding_amount for obs in obligations)

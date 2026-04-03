@@ -10,6 +10,9 @@
         <a href="{% url 'lease_settlement' lease.id %}" class="btn btn-sm btn-outline-success me-2">
             <i class="bi bi-calculator me-1"></i> Settlement
         </a>
+        <a href="{% url 'send_rent_reminder' lease.id %}" class="btn btn-sm btn-outline-info me-2">
+            <i class="bi bi-envelope me-1"></i> Send Reminder
+        </a>
         <a href="{% url 'lease_update' lease.id %}" class="btn btn-sm btn-primary me-2">
             <i class="bi bi-pencil me-1"></i> Edit Lease
         </a>
@@ -19,16 +22,25 @@
     </div>
 </div>
 
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+{% endif %}
+
 <div class="row g-4 mb-4">
     <div class="col-md-6">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-header bg-white pb-0 border-0 pt-4">
-                <h5 class="mb-0">Financial Terms</h5>
+                <h5 class="mb-0 fw-bold">Financial Terms</h5>
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-4 text-muted">Rent Amount</dt>
-                    <dd class="col-sm-8">${{ lease.rent_amount|floatformat:2 }} ({{ lease.get_rent_frequency_display }})</dd>
+                    <dd class="col-sm-8 fw-bold">${{ lease.rent_amount|floatformat:2 }} ({{ lease.get_rent_frequency_display }})</dd>
                     
                     <dt class="col-sm-4 text-muted">Bond/Deposit</dt>
                     <dd class="col-sm-8">${{ lease.bond_required|floatformat:2 }}</dd>
@@ -45,24 +57,86 @@
     <div class="col-md-6">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-header bg-white pb-0 border-0 pt-4">
-                <h5 class="mb-0">Contract Information</h5>
+                <h5 class="mb-0 fw-bold">Contract Information</h5>
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-4 text-muted">Start Date</dt>
-                    <dd class="col-sm-8">{{ lease.start_date|date:"M d, Y" }}</dd>
+                    <dd class="col-sm-8">{{ lease.start_date|date:"F d, Y" }}</dd>
                     
                     <dt class="col-sm-4 text-muted">End Date</dt>
-                    <dd class="col-sm-8">{{ lease.end_date|date:"M d, Y" }}</dd>
+                    <dd class="col-sm-8">{{ lease.end_date|date:"F d, Y" }}</dd>
                     
                     <dt class="col-sm-4 text-muted">Status</dt>
                     <dd class="col-sm-8">
-                        <span class="badge bg-secondary">{{ lease.get_status_display }}</span>
+                        <span class="badge {% if lease.status == 'active' %}bg-success{% elif lease.status == 'ended' %}bg-secondary{% else %}bg-info{% endif %} px-3 rounded-pill">
+                            {{ lease.get_status_display }}
+                        </span>
                     </dd>
                     
                     <dt class="col-sm-4 text-muted">Terms</dt>
-                    <dd class="col-sm-8">{{ lease.terms|default:"—" }}</dd>
+                    <dd class="col-sm-8">{{ lease.terms|default:"—"|linebreaksbr }}</dd>
                 </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Summary Section -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white pb-0 border-0 pt-4">
+                <h5 class="mb-0 fw-bold">Recent Financial Records</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rec in lease.financial_records.all|slice:":5" %}
+                            <tr>
+                                <td>{{ rec.date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if rec.transaction_type == 'incoming' %}
+                                    <span class="text-success small fw-bold">IN</span>
+                                    {% else %}
+                                    <span class="text-danger small fw-bold">OUT</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ rec.get_category_display }}</td>
+                                <td class="fw-bold">{% if rec.transaction_type == 'outgoing' %}-{% endif %}${{ rec.amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if rec.is_paid %}
+                                    <span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i>Paid</span>
+                                    {% else %}
+                                    <span class="text-warning small"><i class="bi bi-clock me-1"></i>Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'financial_record_detail' rec.id %}" class="btn btn-xs btn-light border py-0 px-1"><i class="bi bi-eye"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3 small">No financial records yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-2">
+                    <a href="{% url 'financial_list' %}?property={{ lease.property.id }}" class="btn btn-sm btn-link text-decoration-none">View All Records for this Property</a>
+                </div>
             </div>
         </div>
     </div>

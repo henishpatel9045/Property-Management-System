@@ -52,20 +52,24 @@
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-3 bg-white p-3 rounded shadow-sm border">
-                    <span class="text-muted fw-bold">Total Arrears ({{ overdue_count }} bills)</span>
+                    <span class="text-muted fw-bold">Total Arrears ({{ overdue_count }} periods)</span>
                     <span class="fw-bold text-danger">${{ total_arrears|floatformat:2 }}</span>
                 </div>
-                <div class="d-flex justify-content-between mb-3 bg-white p-3 rounded shadow-sm border">
-                    <span class="text-muted fw-bold">Total Expenses Logged</span>
-                    <span class="fw-bold text-dark">${{ total_expenses|floatformat:2 }}</span>
+                <div class="d-flex justify-content-between mb-2 bg-white p-2 px-3 rounded shadow-sm border-start border-4 border-success">
+                    <span class="text-muted small fw-bold">Total Income</span>
+                    <span class="fw-bold text-success">${{ total_income|floatformat:2 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3 bg-white p-2 px-3 rounded shadow-sm border-start border-4 border-danger">
+                    <span class="text-muted small fw-bold">Total Expenses</span>
+                    <span class="fw-bold text-danger">${{ total_expenses|floatformat:2 }}</span>
                 </div>
                 {% if unpaid_expenses > 0 %}
                 <div class="alert alert-warning py-2 mb-0 border-warning border-opacity-50 small">
-                    <i class="bi bi-exclamation-circle me-1"></i> You have {{ unpaid_expenses }} unpaid expenses recorded against this property.
+                    <i class="bi bi-exclamation-circle me-1"></i> You have {{ unpaid_expenses }} unpaid expenses recorded.
                 </div>
                 {% endif %}
                 <div class="d-grid mt-4">
-                    <a href="{% url 'expense_list' %}" class="btn btn-outline-primary btn-sm">Manage Expenses</a>
+                    <a href="{% url 'financial_list' %}?property={{ property.id }}" class="btn btn-outline-primary btn-sm">Manage Financial Records</a>
                 </div>
             </div>
         </div>

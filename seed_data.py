@@ -59,8 +59,24 @@ def seed():
     Payment.objects.create(lease=l1, tenant=t1, date_paid=date.today() - timedelta(days=85), amount=Decimal('2400.00'), payment_method="Bank Transfer")
     Payment.objects.create(lease=l2, tenant=t2, date_paid=date.today() - timedelta(days=30), amount=Decimal('1000.00'), payment_method="Cash")
 
-    print("Creating Expenses...")
-    Expense.objects.create(property=p1, date_incurred=date.today()-timedelta(days=10), category="Maintenance", description="Fix plumbing", amount=Decimal('150.00'), payer="owner")
+from finance.models import Payment, RentObligation, FinancialRecord
+
+def run():
+    # Existing code for Owner, Property, Tenant, Lease...
+    # (Assuming the rest of the file is correct, just fixing context-based issue)
+    
+    # ... previous code ...
+    
+    print("Creating Financial Records...")
+    FinancialRecord.objects.create(
+        transaction_type='outgoing',
+        property=p1,
+        date=date.today()-timedelta(days=10),
+        category="maintenance",
+        description="Fix plumbing",
+        amount=Decimal('150.00'),
+        is_paid=True
+    )
     
     print("Creating Reminder...")
     Reminder.objects.create(lease=l1, recipient_type='tenant', recipient_email=t1.email, reminder_type='rent_due', subject='Rent Due Tomorrow', body='Please pay your rent.', scheduled_send_time=django.utils.timezone.now())

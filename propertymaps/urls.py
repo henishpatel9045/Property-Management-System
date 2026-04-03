@@ -25,5 +25,6 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('finance/', include('finance.urls')),
     path('properties/', include('properties.urls')),
+    path('cron-jobs/', include('communications.urls')),
     path('', RedirectView.as_view(pattern_name='dashboard', permanent=False), name='index'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

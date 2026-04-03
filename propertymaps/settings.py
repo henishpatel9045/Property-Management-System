@@ -131,3 +131,11 @@ AUTH_USER_MODEL = 'accounts.Owner'
 
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+# ─── Email (console for dev — swap for SMTP in production) ──────────────
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'PropRMS <noreply@proprms.com>'
+
+# ─── Cron/Automation (Used by external cron services like cron-job.org) ──────────────
+CRON_TRIGGER_KEY = 'proprms_cron'
+CRON_TRIGGER_SECRET = 'your-secure-secret-here'

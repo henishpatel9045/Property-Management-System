@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2">Mark Rent as Paid</h1>
+    <a href="{% url 'ledger' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Ledger
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mx-auto">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+            <div class="card-header bg-success text-white border-bottom-0 pt-4 pb-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-check-circle-fill me-2"></i> Record Rent Payment</h5>
+                <p class="mb-0 opacity-75 small">Tenant: {{ obligation.lease.tenant }} <span class="mx-2">•</span> Due: {{ obligation.due_date|date:"d M Y" }}</p>
+            </div>
+            <div class="card-body p-4 bg-light bg-opacity-50">
+                <div class="alert alert-info py-2 mb-4">
+                    <h6 class="fw-bold mb-1">Expected Amount: ${{ obligation.expected_amount|floatformat:2 }}</h6>
+                    <small>Already Paid: ${{ obligation.amount_paid|floatformat:2 }} <span class="mx-2">•</span> Outstanding: ${{ obligation.outstanding_amount|floatformat:2 }}</small>
+                </div>
+                
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger py-2 border-0 rounded-3 shadow-sm mb-4">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">{{ form.amount_paid.label }} ($)</label>
+                        {{ form.amount_paid }}
+                        {% if form.amount_paid.errors %}
+                        <div class="text-danger small">{{ form.amount_paid.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">{{ form.date_paid.label }}</label>
+                        {{ form.date_paid }}
+                        {% if form.date_paid.errors %}
+                        <div class="text-danger small">{{ form.date_paid.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">{{ form.payment_method.label }}</label>
+                        {{ form.payment_method }}
+                        {% if form.payment_method.errors %}
+                        <div class="text-danger small">{{ form.payment_method.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">{{ form.reference.label }}</label>
+                        {{ form.reference }}
+                        {% if form.reference.errors %}
+                        <div class="text-danger small">{{ form.reference.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">{{ form.notes.label }}</label>
+                        {{ form.notes }}
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{% url 'ledger' %}" class="btn btn-light rounded-pill px-4">Cancel</a>
+                        <button type="submit" class="btn btn-success rounded-pill px-5 shadow-sm fw-bold">Confirm Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
