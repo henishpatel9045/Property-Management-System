@@ -152,7 +152,7 @@ def mark_rent_paid(request, pk):
                 payment_method=payment_method,
                 reference=reference,
             )
-            allocate_payment(payment)
+            allocate_payment(payment, target_obligation=obligation)
 
             # Create a linked FinancialRecord (incoming)
             FinancialRecord.objects.create(
@@ -198,6 +198,11 @@ class PaymentCreateView(LoginRequiredMixin, CreateView):
         kwargs = super().get_form_kwargs()
         kwargs['owner'] = self.request.user
         return kwargs
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        allocate_payment(self.object)
+        return response
 
 
 # ─────────────────────────────────────────────

@@ -18,7 +18,3 @@ def create_rent_obligations(sender, instance, created, **kwargs):
             due_date__gte=today
         ).update(expected_amount=instance.rent_amount)
 
-@receiver(post_save, sender=Payment)
-def auto_allocate_payment(sender, instance, created, **kwargs):
-    if created:
-        allocate_payment(instance)

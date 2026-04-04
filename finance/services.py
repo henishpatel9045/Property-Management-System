@@ -3,6 +3,7 @@ from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 from django.db import transaction
 from properties.models import Lease
+from django.db.models import Sum
 from finance.models import RentObligation, Payment, PaymentAllocation
 
 def generate_rent_obligations_for_lease(lease: Lease, horizon_months: int = 12):
@@ -44,27 +45,28 @@ def generate_rent_obligations_for_lease(lease: Lease, horizon_months: int = 12):
         RentObligation.objects.bulk_create(obligations)
 
 @transaction.atomic
-def allocate_payment(payment: Payment):
+def allocate_payment(payment: Payment, target_obligation: RentObligation = None):
     """
-    Allocate a payment automatically to the oldest unpaid/partial rent obligations.
+    Allocate a payment. If target_obligation is provided, allocate to it first.
+    Then automatically allocate any remainder chronologically to the oldest unpaid/partial rent obligations.
+    Prevents double allocation by dynamically computing total allocated amount.
     """
-    # Find active unpaid or partial obligations for this lease, ordered by due_date
-    obligations = RentObligation.objects.filter(
-        lease=payment.lease,
-        status__in=['unpaid', 'partial']
-    ).order_by('due_date')
+    allocated_total = payment.allocations.aggregate(total=Sum('amount_allocated'))['total'] or Decimal('0.00')
+    remaining_payment = payment.amount - allocated_total
 
-    remaining_payment = payment.amount
-    
-    for obs in obligations:
-        if remaining_payment <= 0:
-            break
+    if remaining_payment <= 0:
+        return
+
+    # Helper to allocate to a specific obligation
+    def _allocate_to_obs(obs, current_remaining):
+        if current_remaining <= 0:
+            return current_remaining
             
         outstanding = obs.outstanding_amount
         if outstanding <= 0:
-            continue
+            return current_remaining
             
-        allocation_amount = min(outstanding, remaining_payment)
+        allocation_amount = min(outstanding, current_remaining)
         
         # Create allocation
         PaymentAllocation.objects.create(
@@ -81,7 +83,24 @@ def allocate_payment(payment: Payment):
             obs.status = 'partial'
         obs.save()
         
-        remaining_payment -= allocation_amount
+        return current_remaining - allocation_amount
+
+    # Allocate to target first if specified
+    if target_obligation:
+        if target_obligation.status in ['unpaid', 'partial']:
+            remaining_payment = _allocate_to_obs(target_obligation, remaining_payment)
+
+    if remaining_payment > 0:
+        # Find active unpaid or partial obligations for this lease, ordered by due_date
+        obligations = RentObligation.objects.filter(
+            lease=payment.lease,
+            status__in=['unpaid', 'partial']
+        ).order_by('due_date')
+
+        for obs in obligations:
+            if remaining_payment <= 0:
+                break
+            remaining_payment = _allocate_to_obs(obs, remaining_payment)
 
     # Save any unallocated balance
     payment.unallocated_balance = remaining_payment
