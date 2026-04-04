@@ -19,6 +19,7 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.views.generic import RedirectView
 from django.views.static import serve
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,7 +27,9 @@ urlpatterns = [
     path('finance/', include('finance.urls')),
     path('properties/', include('properties.urls')),
     path('cron-jobs/', include('communications.urls')),
-    path('', RedirectView.as_view(pattern_name='dashboard', permanent=False), name='index'),
+    path('', views.home, name='home'),
+    path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
+    path('terms-and-conditions/', views.terms_conditions, name='terms_conditions'),
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
 ]

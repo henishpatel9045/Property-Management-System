@@ -53,14 +53,32 @@
     </style>
 </head>
 <body>
-    <div class="d-flex">
+    <!-- Mobile Header -->
+    <nav class="navbar navbar-dark d-md-none px-3 py-2 shadow-sm" style="background: #1e293b;">
+        <a href="{% url 'dashboard' %}" class="navbar-brand text-decoration-none m-0 font-weight-bold">
+            <i class="bi bi-buildings-fill me-2"></i>PropRMS
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row min-vh-100">
         <!-- Sidebar -->
-        <div class="sidebar col-md-3 col-lg-2 d-md-block collapse" id="sidebarMenu">
-            <a href="{% url 'dashboard' %}" class="navbar-brand text-decoration-none">
+        <div class="sidebar offcanvas-md offcanvas-start flex-shrink-0" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel" style="width: 280px; max-width: 100%;">
+            <div class="offcanvas-header border-bottom d-md-none" style="border-color: rgba(255,255,255,0.1) !important;">
+                <h5 class="offcanvas-title text-white" id="sidebarMenuLabel">
+                    <i class="bi bi-buildings-fill me-2"></i>PropRMS
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
+            </div>
+            
+            <a href="{% url 'dashboard' %}" class="navbar-brand text-decoration-none d-none d-md-block">
                 <i class="bi bi-buildings-fill me-2"></i>PropRMS
             </a>
-            <div class="position-sticky pt-3">
-                <ul class="nav flex-column px-3">
+            
+            <div class="offcanvas-body d-flex flex-column pt-3">
+                <ul class="nav flex-column px-3 w-100">
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
                             <i class="bi bi-speedometer2 me-2"></i> Dashboard
@@ -94,7 +112,7 @@
                     <li class="nav-item mt-4">
                         <hr class="dropdown-divider bg-light">
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item pb-3">
                         <form method="post" action="{% url 'logout' %}" class="px-3 py-2">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-outline-light w-100">
@@ -107,7 +125,7 @@
         </div>
 
         <!-- Main Content -->
-        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content d-flex flex-column min-vh-100">
+        <div class="main-content flex-grow-1 px-3 px-md-4 py-4 w-100 d-flex flex-column" style="min-width: 0;">
             <div class="flex-grow-1">
                 {% block content %}{% endblock %}
             </div>
