@@ -186,6 +186,7 @@ def mark_rent_paid(request, pk):
 
 
 @login_required
+@transaction.atomic
 def revert_payment(request, pk):
     obligation = get_object_or_404(
         RentObligation, pk=pk, lease__property__owner=request.user
@@ -205,8 +206,10 @@ def revert_payment(request, pk):
         affected_obligations = list(RentObligation.objects.filter(allocations__payment=payment).distinct())
         
         # 2. Find and delete the matching FinancialRecord
-        # mark_rent_paid creates a FinancialRecord with the same lease, date, and amount.
+        # We must filter by rent_obligation to avoid deleting other records 
+        # with the same date/amount on the same lease.
         FinancialRecord.objects.filter(
+            rent_obligation=obligation,
             lease=payment.lease,
             date=payment.date_paid,
             amount=payment.amount,
@@ -219,7 +222,8 @@ def revert_payment(request, pk):
         
         # 4. Recalculate each affected obligation's amount_paid and status
         for obs in affected_obligations:
-            # Refresh from DB since allocations are gone
+            # Re-fetch from DB to ensure it is fresh
+            obs.refresh_from_db()
             total_allocated = obs.allocations.aggregate(total=Sum('amount_allocated'))['total'] or 0
             obs.amount_paid = total_allocated
             
