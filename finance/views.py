@@ -12,6 +12,11 @@ from django.core.paginator import Paginator
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q, Sum, F
+from django.http import StreamingHttpResponse
+from propertymaps.gdrive_service import (
+    upload_file_to_drive, download_file_stream, delete_file_from_drive,
+    DriveQuotaExceededError, GoogleAuthRevokedError
+)
 
 
 from finance.models import RentObligation, Payment, PaymentAllocation, FinancialRecord, BondAccount
@@ -277,7 +282,27 @@ def financial_record_create(request):
     if request.method == 'POST':
         form = FinancialRecordForm(request.POST, request.FILES, owner=request.user)
         if form.is_valid():
-            form.save()
+            record = form.save(commit=False)
+            uploaded_file = request.FILES.get('upload_attachment')
+            if uploaded_file:
+                try:
+                    file_id = upload_file_to_drive(
+                        user=request.user,
+                        file_obj=uploaded_file,
+                        display_name=uploaded_file.name,
+                        mime_type=uploaded_file.content_type
+                    )
+                    record.drive_file_id = file_id
+                    record.drive_file_name = uploaded_file.name
+                except DriveQuotaExceededError as e:
+                    form.add_error('upload_attachment', str(e))
+                    return render(request, 'finance/financial_record_form.html', {'form': form, 'action': 'Add'})
+                except GoogleAuthRevokedError:
+                    return redirect('google_required')
+                except Exception as e:
+                    form.add_error('upload_attachment', f"Upload failed: {str(e)}")
+                    return render(request, 'finance/financial_record_form.html', {'form': form, 'action': 'Add'})
+            record.save()
             messages.success(request, 'Financial record added successfully.')
             return redirect('financial_list')
     else:
@@ -292,10 +317,52 @@ def financial_record_create(request):
 @login_required
 def financial_record_update(request, pk):
     record = get_object_or_404(FinancialRecord, pk=pk, property__owner=request.user)
+    old_file_id = record.drive_file_id
+    
     if request.method == 'POST':
         form = FinancialRecordForm(request.POST, request.FILES, instance=record, owner=request.user)
         if form.is_valid():
-            form.save()
+            record_instance = form.save(commit=False)
+            uploaded_file = request.FILES.get('upload_attachment')
+            clear_attachment = form.cleaned_data.get('clear_attachment')
+            
+            if uploaded_file:
+                try:
+                    file_id = upload_file_to_drive(
+                        user=request.user,
+                        file_obj=uploaded_file,
+                        display_name=uploaded_file.name,
+                        mime_type=uploaded_file.content_type
+                    )
+                    
+                    # Delete old file if a new one is taking its place
+                    if old_file_id:
+                        try:
+                            delete_file_from_drive(request.user, old_file_id)
+                        except Exception:
+                            pass # We shouldn't fail the upload just because delete failed
+
+                    record_instance.drive_file_id = file_id
+                    record_instance.drive_file_name = uploaded_file.name
+                except DriveQuotaExceededError as e:
+                    form.add_error('upload_attachment', str(e))
+                    return render(request, 'finance/financial_record_form.html', {'form': form, 'action': 'Edit', 'record': record})
+                except GoogleAuthRevokedError:
+                    return redirect('google_required')
+                except Exception as e:
+                    form.add_error('upload_attachment', f"Upload failed: {str(e)}")
+                    return render(request, 'finance/financial_record_form.html', {'form': form, 'action': 'Edit', 'record': record})
+            elif clear_attachment and old_file_id:
+                try:
+                    delete_file_from_drive(request.user, old_file_id)
+                    record_instance.drive_file_id = None
+                    record_instance.drive_file_name = None
+                except GoogleAuthRevokedError:
+                    return redirect('google_required')
+                except Exception as e:
+                    messages.error(request, f"Failed to delete old attachment: {str(e)}")
+
+            record_instance.save()
             messages.success(request, 'Financial record updated.')
             return redirect('financial_record_detail', pk=pk)
     else:
@@ -306,6 +373,43 @@ def financial_record_update(request, pk):
         'action': 'Edit',
         'record': record,
     })
+
+@login_required
+def financial_record_delete(request, pk):
+    record = get_object_or_404(FinancialRecord, pk=pk, property__owner=request.user)
+    if request.method == 'POST':
+        if record.drive_file_id:
+            try:
+                delete_file_from_drive(request.user, record.drive_file_id)
+            except GoogleAuthRevokedError:
+                return redirect('google_required')
+            except Exception as e:
+                # We log it or just let them delete the record anyway
+                pass
+                
+        record.delete()
+        messages.success(request, 'Financial record successfully deleted.')
+        return redirect('financial_list')
+        
+    return render(request, 'finance/financial_record_confirm_delete.html', {'record': record})
+
+@login_required
+def download_financial_attachment(request, pk):
+    record = get_object_or_404(FinancialRecord, pk=pk, property__owner=request.user)
+    if not record.drive_file_id:
+        messages.error(request, 'No attachment found for this record.')
+        return redirect('financial_record_detail', pk=pk)
+        
+    try:
+        fh, filename, mime_type = download_file_stream(request.user, record.drive_file_id)
+        response = StreamingHttpResponse(fh, content_type=mime_type)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except GoogleAuthRevokedError:
+        return redirect('google_required')
+    except Exception as e:
+        messages.error(request, f"Failed to gracefully download file: {str(e)}")
+        return redirect('financial_record_detail', pk=pk)
 
 
 # ─────────────────────────────────────────────

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2">Confirm Deletion</h1>
+    <a href="{% url 'financial_record_detail' record.id %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Cancel & Go Back
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mx-auto">
+        <div class="card border-danger shadow-sm rounded-4 overflow-hidden mt-4">
+            <div class="card-header bg-danger text-white pt-3 pb-3 border-0 d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                <h5 class="mb-0 fw-bold">Permanent Deletion Warning</h5>
+            </div>
+            
+            <div class="card-body p-4 pt-4 text-center">
+                <p class="fs-5 mb-4">Are you absolutely sure you want to delete this financial record?</p>
+                
+                <div class="bg-light bg-opacity-50 p-4 rounded-3 border mb-4 text-start">
+                    <p class="mb-2"><strong>Category:</strong> {{ record.get_category_display }}</p>
+                    <p class="mb-2"><strong>Property:</strong> {{ record.property.name }}</p>
+                    <p class="mb-2"><strong>Date:</strong> {{ record.date|date:"M d, Y" }}</p>
+                    <p class="fs-4 fw-bold {% if record.transaction_type == 'incoming' %}text-success{% else %}text-danger{% endif %} mb-0">
+                        {% if record.transaction_type == 'outgoing' %}-{% endif %}${{ record.amount|floatformat:2 }}
+                    </p>
+                </div>
+
+                {% if record.drive_file_id %}
+                <div class="alert alert-warning text-start">
+                    <i class="bi bi-info-circle-fill me-2"></i> This record has a file attached to it (<strong>{{ record.drive_file_name }}</strong>). Deleting the record will also <strong>permanently delete the file from your Google Drive.</strong>
+                </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'financial_record_delete' record.id %}">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg shadow-sm">Yes, permanently delete this record</button>
+                        <a href="{% url 'financial_record_detail' record.id %}" class="btn btn-light btn-lg border mt-2">No, keep it</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

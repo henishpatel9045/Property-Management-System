@@ -86,7 +86,8 @@ class FinancialRecord(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(blank=True)
     notes = models.TextField(blank=True)
-    attachment = models.FileField(upload_to='financial_records/', null=True, blank=True)
+    drive_file_id = models.CharField(max_length=255, null=True, blank=True)
+    drive_file_name = models.CharField(max_length=255, null=True, blank=True)
     is_paid = models.BooleanField(
         default=False,
         help_text="For outgoing: has the owner paid this? For incoming: has payment been received?"

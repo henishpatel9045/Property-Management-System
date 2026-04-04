@@ -63,12 +63,22 @@ class MarkRentPaidForm(forms.Form):
 
 
 class FinancialRecordForm(forms.ModelForm):
+    upload_attachment = forms.FileField(
+        required=False, 
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control'})
+    )
+    clear_attachment = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        label="Remove existing attachment?"
+    )
+
     class Meta:
         model = FinancialRecord
         fields = [
             'transaction_type', 'property', 'lease', 'rent_obligation',
             'category', 'date', 'amount', 'description',
-            'notes', 'attachment', 'is_paid', 'deduct_from_bond',
+            'notes', 'is_paid', 'deduct_from_bond',
         ]
         widgets = {
             'transaction_type': forms.Select(attrs={'class': 'form-select', 'id': 'id_transaction_type'}),
@@ -82,7 +92,6 @@ class FinancialRecordForm(forms.ModelForm):
                                                   'placeholder': 'Brief description of this record'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3,
                                            'placeholder': 'Additional notes (optional)'}),
-            'attachment': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'is_paid': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'deduct_from_bond': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
