@@ -13,6 +13,7 @@ from django.core.mail import send_mail
 from communications.email_service import send_styled_email
 from django.conf import settings
 from django.db.models import Q, Sum, F
+from django.db import transaction
 from django.http import StreamingHttpResponse
 from propertymaps.gdrive_service import (
     upload_file_to_drive, download_file_stream, delete_file_from_drive,
