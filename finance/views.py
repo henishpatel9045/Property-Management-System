@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import CreateView, UpdateView, ListView, DetailView
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
+from communications.email_service import send_styled_email
 from django.conf import settings
 from django.db.models import Q, Sum, F
 from django.http import StreamingHttpResponse
@@ -533,12 +534,10 @@ def send_settlement_email(request, pk):
         )
 
         try:
-            send_mail(
+            send_styled_email(
                 subject=subject,
-                message=body,
-                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@proprms.com'),
-                recipient_list=[tenant_email],
-                fail_silently=False,
+                text_body=body,
+                recipient_list=[tenant_email]
             )
             messages.success(request, f'Settlement summary email sent to {tenant_email}.')
         except Exception as e:
@@ -585,12 +584,10 @@ def send_rent_reminder_email(request, pk):
         )
 
         try:
-            send_mail(
+            send_styled_email(
                 subject=subject,
-                message=body,
-                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@proprms.com'),
-                recipient_list=[tenant_email],
-                fail_silently=False,
+                text_body=body,
+                recipient_list=[tenant_email]
             )
             messages.success(request, f'Rent reminder sent to {tenant_email}.')
         except Exception as e:
