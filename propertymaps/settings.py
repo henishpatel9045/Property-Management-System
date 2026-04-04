@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / 'env.env')
+load_dotenv(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -149,3 +149,8 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'PropRMS <noreply@prop
 # ─── Cron/Automation (Used by external cron services like cron-job.org) ──────────────
 CRON_TRIGGER_KEY = os.environ.get('CRON_TRIGGER_KEY', 'proprms_cron')
 CRON_TRIGGER_SECRET = os.environ.get('CRON_TRIGGER_SECRET', 'your-secure-secret-here')
+
+# ─── Google OAuth & Drive ──────────────
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', '')
+GOOGLE_OAUTH_PROJECT_ID = os.environ.get('GOOGLE_OAUTH_PROJECT_ID', '')
