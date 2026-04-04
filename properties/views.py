@@ -2,10 +2,18 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from .models import Property, Tenant, Lease
+from .models import Property, Tenant, Lease, Document
 from .forms import PropertyForm, TenantForm, LeaseForm
 from finance.models import FinancialRecord, RentObligation
 from django.db.models import Sum
+from propertymaps.gdrive_service import (
+    upload_file_to_drive, download_file_stream, delete_file_from_drive,
+    DriveQuotaExceededError, GoogleAuthRevokedError
+)
+from django.contrib import messages
+from django.http import StreamingHttpResponse
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
 
 # --- Property Views ---
 class PropertyListView(LoginRequiredMixin, ListView):
@@ -109,6 +117,11 @@ class LeaseDetailView(LoginRequiredMixin, DetailView):
     template_name = 'properties/lease_detail.html'
     context_object_name = 'lease'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['documents'] = self.object.documents.all().order_by('-uploaded_at')
+        return context
+
     def get_queryset(self):
         return Lease.objects.filter(property__owner=self.request.user)
 
@@ -123,6 +136,40 @@ class LeaseCreateView(LoginRequiredMixin, CreateView):
         kwargs['owner'] = self.request.user
         return kwargs
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        lease = self.object
+        files = self.request.FILES.getlist('lease_documents')
+        
+        if files:
+            path_array = ["PropertyMaps", lease.property.name, f"{lease.tenant.first_name} {lease.tenant.last_name}"]
+            for f in files:
+                try:
+                    file_id = upload_file_to_drive(
+                        user=self.request.user,
+                        file_obj=f,
+                        display_name=f.name,
+                        mime_type=f.content_type,
+                        path_array=path_array
+                    )
+                    Document.objects.create(
+                        lease=lease,
+                        property=lease.property,
+                        title=f.name,
+                        drive_file_id=file_id,
+                        drive_file_name=f.name
+                    )
+                except DriveQuotaExceededError:
+                    messages.error(self.request, "Google Drive full. Skipping remaining.")
+                    break
+                except GoogleAuthRevokedError:
+                    messages.error(self.request, "Google Auth revoked.")
+                    break
+                except Exception as e:
+                    messages.error(self.request, f"Upload error: {str(e)}")
+                    
+        return response
+
 class LeaseUpdateView(LoginRequiredMixin, UpdateView):
     model = Lease
     form_class = LeaseForm
@@ -136,3 +183,74 @@ class LeaseUpdateView(LoginRequiredMixin, UpdateView):
         kwargs = super().get_form_kwargs()
         kwargs['owner'] = self.request.user
         return kwargs
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        lease = self.object
+        files = self.request.FILES.getlist('lease_documents')
+        
+        if files:
+            path_array = ["PropertyMaps", lease.property.name, f"{lease.tenant.first_name} {lease.tenant.last_name}"]
+            for f in files:
+                try:
+                    file_id = upload_file_to_drive(
+                        user=self.request.user,
+                        file_obj=f,
+                        display_name=f.name,
+                        mime_type=f.content_type,
+                        path_array=path_array
+                    )
+                    Document.objects.create(
+                        lease=lease,
+                        property=lease.property,
+                        title=f.name,
+                        drive_file_id=file_id,
+                        drive_file_name=f.name
+                    )
+                except DriveQuotaExceededError:
+                    messages.error(self.request, "Google Drive full. Skipping remaining.")
+                    break
+                except GoogleAuthRevokedError:
+                    messages.error(self.request, "Google Auth revoked.")
+                    break
+                except Exception as e:
+                    messages.error(self.request, f"Upload error: {str(e)}")
+                    
+        return response
+
+# --- Document File Views ---
+@login_required
+def download_lease_document(request, pk):
+    doc = get_object_or_404(Document, pk=pk, lease__property__owner=request.user)
+    if not doc.drive_file_id:
+        messages.error(request, 'No attachment found.')
+        return redirect('lease_detail', pk=doc.lease.id)
+        
+    try:
+        fh, filename, mime_type = download_file_stream(request.user, doc.drive_file_id)
+        response = StreamingHttpResponse(fh, content_type=mime_type)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except GoogleAuthRevokedError:
+        return redirect('google_required')
+    except Exception as e:
+        messages.error(request, f"Failed to download file: {str(e)}")
+        return redirect('lease_detail', pk=doc.lease.id)
+
+@login_required
+def delete_lease_document(request, pk):
+    doc = get_object_or_404(Document, pk=pk, lease__property__owner=request.user)
+    lease_id = doc.lease.id
+    
+    if request.method == 'POST':
+        if doc.drive_file_id:
+            try:
+                delete_file_from_drive(request.user, doc.drive_file_id)
+            except GoogleAuthRevokedError:
+                return redirect('google_required')
+            except Exception as e:
+                pass
+        doc.delete()
+        messages.success(request, 'Document successfully deleted.')
+        
+    return redirect('lease_detail', pk=lease_id)

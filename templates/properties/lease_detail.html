@@ -82,6 +82,47 @@
     </div>
 </div>
 
+<!-- Attached Documents Section -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white pb-0 border-0 pt-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-folder2-open text-primary me-2"></i>Attached Documents & Files</h5>
+            </div>
+            <div class="card-body">
+                {% if documents %}
+                <div class="row g-3">
+                    {% for doc in documents %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
+                            <i class="bi bi-cloud-check fs-2 text-primary me-3"></i>
+                            <div class="flex-grow-1 text-truncate">
+                                <p class="mb-0 fw-medium text-truncate" title="{{ doc.drive_file_name }}">{{ doc.drive_file_name }}</p>
+                                <small class="text-muted">Added {{ doc.uploaded_at|date:"M d, Y" }}</small>
+                            </div>
+                            <div class="d-flex flex-column gap-1 ms-2">
+                                <a href="{% url 'download_lease_document' doc.id %}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" title="Download">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                <form method="post" action="{% url 'delete_lease_document' doc.id %}" onsubmit="return confirm('Are you sure you want to permanently delete this document from Google Drive?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0 text-center py-3">No documents attached yet. Edit the lease to bulk upload files.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Financial Summary Section -->
 <div class="row g-4 mb-4">
     <div class="col-12">
@@ -141,4 +182,44 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Deletion overlay
+        var deleteForms = document.querySelectorAll('form[action*="/delete/"]');
+        
+        deleteForms.forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                var overlay = document.createElement('div');
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.85)';
+                overlay.style.zIndex = '9999';
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.backdropFilter = 'blur(4px)';
+                
+                overlay.innerHTML = `
+                    <div class="spinner-border text-danger shadow-sm" role="status" style="width: 3.5rem; height: 3.5rem; border-width: 0.35em;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h3 class="mt-4 fw-bold text-dark">Deleting from Google Drive...</h3>
+                    <p class="text-muted fw-medium mt-1">Please wait, do not close or refresh this window.</p>
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                var submitBtn = form.querySelector('button[type="submit"]');
+                if(submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

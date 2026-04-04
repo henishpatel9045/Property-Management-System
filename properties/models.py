@@ -63,7 +63,8 @@ class Document(models.Model):
     lease = models.ForeignKey(Lease, on_delete=models.CASCADE, related_name='documents', blank=True, null=True)
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='documents', blank=True, null=True)
     title = models.CharField(max_length=255)
-    file = models.FileField(upload_to='documents/')
+    drive_file_id = models.CharField(max_length=255, null=True, blank=True)
+    drive_file_name = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 

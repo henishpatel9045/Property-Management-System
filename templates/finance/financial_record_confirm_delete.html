@@ -45,4 +45,43 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Deletion overlay
+        var form = document.querySelector('form');
+        
+        form.addEventListener('submit', function(e) {
+            var overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.85)';
+            overlay.style.zIndex = '9999';
+            overlay.style.display = 'flex';
+            overlay.style.flexDirection = 'column';
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
+            overlay.style.backdropFilter = 'blur(4px)';
+            
+            overlay.innerHTML = `
+                <div class="spinner-border text-danger shadow-sm" role="status" style="width: 3.5rem; height: 3.5rem; border-width: 0.35em;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h3 class="mt-4 fw-bold text-dark">Deleting from Google Drive...</h3>
+                <p class="text-muted fw-medium mt-1">Please wait, do not close or refresh this window.</p>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            var submitBtn = form.querySelector('button[type="submit"]');
+            if(submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Deleting...';
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -39,24 +39,39 @@ def get_drive_service(user):
     except Exception as e:
         raise e
 
-def _get_or_create_base_folder(service):
-    folder_name = "PropertyMaps"
-    query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
-    results = service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
-    items = results.get('files', [])
-    if items:
-        return items[0].get('id')
+def _get_or_create_nested_folder(service, path_array):
+    parent_id = None
     
-    file_metadata = {
-        'name': folder_name,
-        'mimeType': 'application/vnd.google-apps.folder'
-    }
-    folder = service.files().create(body=file_metadata, fields='id').execute()
-    return folder.get('id')
+    for folder_name in path_array:
+        # Sanitize folder_name to avoid query injection breaks
+        safe_name = folder_name.replace("'", "\\'")
+        query = f"name='{safe_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+        if parent_id:
+            query += f" and '{parent_id}' in parents"
+            
+        results = service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
+        items = results.get('files', [])
+        
+        if items:
+            parent_id = items[0].get('id')
+        else:
+            file_metadata = {
+                'name': folder_name,
+                'mimeType': 'application/vnd.google-apps.folder'
+            }
+            if parent_id:
+                file_metadata['parents'] = [parent_id]
+            folder = service.files().create(body=file_metadata, fields='id').execute()
+            parent_id = folder.get('id')
+            
+    return parent_id
 
-def upload_file_to_drive(user, file_obj, display_name, mime_type):
+def upload_file_to_drive(user, file_obj, display_name, mime_type, path_array=None):
     service = get_drive_service(user)
-    folder_id = _get_or_create_base_folder(service)
+    if not path_array:
+        path_array = ["PropertyMaps"]
+        
+    folder_id = _get_or_create_nested_folder(service, path_array)
     
     file_metadata = {
         'name': display_name,

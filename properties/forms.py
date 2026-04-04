@@ -26,7 +26,35 @@ class TenantForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
 
+class MultipleFileInput(forms.FileInput):
+    allow_multiple_selected = True
+
+    def value_from_datadict(self, data, files, name):
+        if hasattr(files, 'getlist'):
+            return files.getlist(name)
+        return files.get(name)
+
+class MultipleFileField(forms.FileField):
+    widget = MultipleFileInput
+    
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+            # If all were empty strings/None, return empty list
+            if not any(result):
+                return []
+            return result
+        else:
+            return single_file_clean(data, initial)
+
 class LeaseForm(forms.ModelForm):
+    lease_documents = MultipleFileField(
+        required=False,
+        widget=MultipleFileInput(attrs={'class': 'form-control', 'multiple': True}),
+        label="Attach Documents / Photos (Multiple allowed)"
+    )
+
     class Meta:
         model = Lease
         fields = ['property', 'tenant', 'start_date', 'end_date', 'rent_amount', 'rent_frequency', 'due_day', 'grace_period_days', 'bond_required', 'status', 'terms', 'expenses_owner_paid_default']
