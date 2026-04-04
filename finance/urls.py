@@ -7,6 +7,7 @@ urlpatterns = [
     path('ledger/export/', views.export_ledger_excel, name='export_ledger_excel'),
     path('obligation/<int:pk>/adjust/', views.RentObligationAdjustmentView.as_view(), name='obligation_adjust'),
     path('obligation/<int:pk>/mark-paid/', views.mark_rent_paid, name='mark_rent_paid'),
+    path('obligation/<int:pk>/revert-payment/', views.revert_payment, name='revert_payment'),
 
     # Payments (legacy)
     path('payments/add/', views.PaymentCreateView.as_view(), name='payment_create'),

@@ -185,6 +185,61 @@ def mark_rent_paid(request, pk):
     })
 
 
+@login_required
+def revert_payment(request, pk):
+    obligation = get_object_or_404(
+        RentObligation, pk=pk, lease__property__owner=request.user
+    )
+    
+    # Find the most recent allocation for this obligation
+    last_allocation = obligation.allocations.select_related('payment').order_by('-created_at').first()
+    
+    if not last_allocation:
+        messages.error(request, "No payments found for this obligation to revert.")
+        return redirect('ledger')
+        
+    payment = last_allocation.payment
+    
+    if request.method == 'POST':
+        # 1. Identify all obligations affected by this payment
+        affected_obligations = list(RentObligation.objects.filter(allocations__payment=payment).distinct())
+        
+        # 2. Find and delete the matching FinancialRecord
+        # mark_rent_paid creates a FinancialRecord with the same lease, date, and amount.
+        FinancialRecord.objects.filter(
+            lease=payment.lease,
+            date=payment.date_paid,
+            amount=payment.amount,
+            transaction_type='incoming',
+            category='rent_payment'
+        ).delete()
+        
+        # 3. Delete the Payment (Allocations will cascade delete)
+        payment.delete()
+        
+        # 4. Recalculate each affected obligation's amount_paid and status
+        for obs in affected_obligations:
+            # Refresh from DB since allocations are gone
+            total_allocated = obs.allocations.aggregate(total=Sum('amount_allocated'))['total'] or 0
+            obs.amount_paid = total_allocated
+            
+            if obs.amount_paid <= 0:
+                obs.status = 'unpaid'
+            elif obs.amount_paid < obs.expected_amount:
+                obs.status = 'partial'
+            else:
+                obs.status = 'paid'
+            obs.save()
+            
+        messages.success(request, f"Payment of ${payment.amount} has been reverted.")
+        return redirect('ledger')
+        
+    return render(request, 'finance/revert_confirm.html', {
+        'obligation': obligation,
+        'payment': payment,
+    })
+
+
 # ─────────────────────────────────────────────
 # PAYMENT CREATE (legacy - kept for compatibility)
 # ─────────────────────────────────────────────

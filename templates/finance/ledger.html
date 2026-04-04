@@ -98,6 +98,12 @@
                                 <i class="bi bi-pencil-square"></i>
                             </a>
                             {% endif %}
+
+                            {% if obs.amount_paid > 0 %}
+                            <a href="{% url 'revert_payment' obs.pk %}" class="btn btn-sm btn-outline-danger" title="Revert Payment">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </a>
+                            {% endif %}
                             
                             {% if obs.financial_records.all %}
                             <a href="{% url 'financial_record_detail' obs.financial_records.first.id %}" class="btn btn-sm btn-light border" title="View Related Record">
