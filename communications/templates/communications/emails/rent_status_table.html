@@ -1,0 +1,114 @@
+{% extends "communications/emails/base_email.html" %}
+
+{% block extra_style %}
+<style>
+    .rent-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 14px;
+        color: #4a5568;
+    }
+    .rent-table th {
+        background-color: #f8fafc;
+        text-align: left;
+        padding: 12px;
+        border-bottom: 2px solid #e2e8f0;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .rent-table td {
+        padding: 12px;
+        border-bottom: 1px solid #edf2f7;
+    }
+    .rent-table tr:last-child td {
+        border-bottom: none;
+    }
+    .amount {
+        text-align: right;
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: 600;
+    }
+    .total-section {
+        background-color: #f0f4ff;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 30px;
+        border: 1px solid #c3dafe;
+    }
+    .total-label {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1a365d;
+    }
+    .total-amount {
+        font-size: 24px;
+        font-weight: 800;
+        color: #4c51bf;
+        float: right;
+    }
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-unpaid { background-color: #fed7d7; color: #9b2c2c; }
+    .status-partial { background-color: #fefcbf; color: #975a16; }
+    
+    .clearfix::after {
+        content: "";
+        clear: both;
+        display: table;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p>Dear {{ tenant_name }},</p>
+
+<p>This is a consolidated statement of your rent obligations for <strong>{{ property_name }}</strong> as of today, {{ today_date }}.</p>
+
+<table class="rent-table">
+    <thead>
+        <tr>
+            <th>Due Date</th>
+            <th>Expected</th>
+            <th>Paid</th>
+            <th style="text-align: right;">Outstanding</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for obs in obligations %}
+        <tr>
+            <td>{{ obs.due_date|date:"M d, Y" }}</td>
+            <td>${{ obs.expected_amount }}</td>
+            <td>${{ obs.amount_paid }}</td>
+            <td class="amount">${{ obs.outstanding_amount }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="total-section clearfix">
+    <span class="total-label">Current Total Due:</span>
+    <span class="total-amount">${{ total_due }}</span>
+</div>
+
+<p style="margin-top: 30px;">
+    Please arrange for the payment of the outstanding amount as soon as possible to ensure your account remains in good standing.
+</p>
+
+{% if payment_instructions %}
+<div style="background-color: #f7fafc; padding: 15px; border-radius: 6px; border-left: 4px solid #4299e1; margin-top: 20px;">
+    <strong style="display: block; margin-bottom: 5px;">Payment Instructions:</strong>
+    {{ payment_instructions|linebreaksbr }}
+</div>
+{% endif %}
+
+<p>If you have already made a payment that is not reflected here, please ignore this message or contact us with your payment reference.</p>
+
+<p>Thank you,<br>
+{{ company_name }} Management</p>
+{% endblock %}

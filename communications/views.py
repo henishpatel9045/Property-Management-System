@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from .utils import process_pending_reminders
+from .utils import process_pending_reminders, run_all_dynamic_rent_reminders
 
 @csrf_exempt
 def cron_trigger_reminders(request):
@@ -30,13 +30,23 @@ def cron_trigger_reminders(request):
     if cron_key != settings.CRON_TRIGGER_KEY or cron_secret != settings.CRON_TRIGGER_SECRET:
         return JsonResponse({'error': 'Unauthorized: Invalid credentials.'}, status=403)
 
-    # Process pending reminders
+    # Process pending reminders (legacy/standard model)
     sent_count, failed_count = process_pending_reminders()
+    
+    # Process dynamic rent reminders (new system)
+    dyn_sent, dyn_skipped, dyn_error = run_all_dynamic_rent_reminders()
 
     return JsonResponse({
         'status': 'success',
         'message': 'Reminder processing complete.',
-        'sent_count': sent_count,
-        'failed_count': failed_count,
-        'total_processed': sent_count + failed_count
+        'standard_reminders': {
+            'sent_count': sent_count,
+            'failed_count': failed_count,
+        },
+        'dynamic_rent_reminders': {
+            'sent_count': dyn_sent,
+            'skipped_count': dyn_skipped,
+            'error_count': dyn_error,
+        },
+        'total_sent': sent_count + dyn_sent
     })

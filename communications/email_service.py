@@ -3,7 +3,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import linebreaks
 
-def send_styled_email(subject, text_body, recipient_list, title=None):
+def send_styled_email(subject, text_body, recipient_list, title=None, template_name='communications/emails/base_email.html', extra_context=None):
     if title is None:
         title = subject
         
@@ -14,8 +14,10 @@ def send_styled_email(subject, text_body, recipient_list, title=None):
         'body': html_body,
         'company_name': getattr(settings, 'COMPANY_NAME', 'PropRMS'),
     }
+    if extra_context:
+        context.update(extra_context)
     
-    html_message = render_to_string('communications/emails/base_email.html', context)
+    html_message = render_to_string(template_name, context)
     
     send_mail(
         subject=subject,
