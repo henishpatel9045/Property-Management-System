@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from email.utils import formataddr
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+    "gmailapi_backend",
     # Custom Apps
     'accounts',
     'properties',
@@ -138,13 +139,13 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
 # ─── Email (SMTP Configuration) ──────────────
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'PropRMS <noreply@proprms.com>')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', formataddr(("PropRMS", EMAIL_HOST_USER)))
 
 # ─── Cron/Automation (Used by external cron services like cron-job.org) ──────────────
 CRON_TRIGGER_KEY = os.environ.get('CRON_TRIGGER_KEY', 'proprms_cron')
@@ -154,3 +155,9 @@ CRON_TRIGGER_SECRET = os.environ.get('CRON_TRIGGER_SECRET', 'your-secure-secret-
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
 GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', '')
 GOOGLE_OAUTH_PROJECT_ID = os.environ.get('GOOGLE_OAUTH_PROJECT_ID', '')
+
+EMAIL_BACKEND = 'gmailapi_backend.mail.GmailBackend'
+
+GMAIL_API_CLIENT_ID = os.environ.get('GMAIL_API_CLIENT_ID', '')
+GMAIL_API_CLIENT_SECRET = os.environ.get('GMAIL_API_CLIENT_SECRET', '')
+GMAIL_API_REFRESH_TOKEN = os.environ.get('GMAIL_API_REFRESH_TOKEN', '')

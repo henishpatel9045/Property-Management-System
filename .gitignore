@@ -118,3 +118,10 @@ gunicorn.pid
 
 # Local settings
 local_settings.py
+
+# Google OAuth Credentials
+client_secret.json
+token.json
+
+# extras
+ignore/*
