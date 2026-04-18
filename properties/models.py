@@ -22,6 +22,7 @@ class Tenant(models.Model):
     last_name = models.CharField(max_length=100)
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
+    telegram_chat_id = models.CharField(max_length=100, blank=True, null=True, unique=True)
     emergency_contact = models.TextField(blank=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

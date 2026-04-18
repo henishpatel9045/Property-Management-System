@@ -1,0 +1,13 @@
+services:
+  bot-listener:
+    build: .
+    container_name: proprms-bot-listener
+    env_file: .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10mb"
+        max-file: "3"

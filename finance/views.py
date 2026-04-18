@@ -649,7 +649,26 @@ def send_rent_reminder_email(request, pk):
                 text_body=body,
                 recipient_list=[tenant_email]
             )
-            messages.success(request, f'Rent reminder sent to {tenant_email}.')
+            
+            # --- TELEGRAM NOTIFICATION ---
+            if lease.tenant.telegram_chat_id:
+                from communications.telegram_service import send_telegram_message, format_styled_telegram_message
+                
+                tg_body = (
+                    f"Dear {lease.tenant.first_name},\n\n"
+                    f"This is a friendly reminder regarding your tenancy at <b>{lease.property.name}</b>.\n\n"
+                    f"{due_info}\n"
+                    f"Please ensure payment is made by the due date.\n\n"
+                    f"If you've already paid, please disregard this notice."
+                )
+                
+                styled_tg_msg = format_styled_telegram_message(
+                    title="Rent Reminder",
+                    body=tg_body
+                )
+                send_telegram_message(lease.tenant.telegram_chat_id, styled_tg_msg)
+
+            messages.success(request, f'Rent reminder sent to {tenant_email} (and Telegram if linked).')
         except Exception as e:
             messages.error(request, f'Email could not be sent: {str(e)}')
 

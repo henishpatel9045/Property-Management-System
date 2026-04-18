@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.conf import settings
 from .models import Reminder, AuditLog
 from .email_service import send_styled_email
+from .telegram_service import send_telegram_message, format_styled_telegram_message
 
 
 logger = logging.getLogger(__name__)
@@ -88,10 +89,26 @@ def process_pending_reminders():
             reminder.sent_time = now
             reminder.save()
 
+            # --- TELEGRAM NOTIFICATION ---
+            if reminder.lease and reminder.lease.tenant and reminder.lease.tenant.telegram_chat_id:
+                try:
+                    tg_body = reminder.body
+                    # Simple HTML conversion for body (bolding property if possible)
+                    if reminder.lease.property:
+                        tg_body = tg_body.replace(reminder.lease.property.name, f"<b>{reminder.lease.property.name}</b>")
+                    
+                    styled_tg_msg = format_styled_telegram_message(
+                        title=f"{reminder.get_reminder_type_display()} Notice",
+                        body=tg_body
+                    )
+                    send_telegram_message(reminder.lease.tenant.telegram_chat_id, styled_tg_msg)
+                except Exception as tg_e:
+                    logger.error(f"Telegram background send failed for reminder {reminder.id}: {str(tg_e)}")
+
             # Log the action
             AuditLog.objects.create(
                 action='reminder_sent',
-                description=f"Sent {reminder.get_reminder_type_display()} reminder to {reminder.recipient_email}"
+                description=f"Sent {reminder.get_reminder_type_display()} reminder (Email & TG if linked) to {reminder.recipient_email}"
             )
             sent_count += 1
             logger.info(f"Successfully sent reminder ID {reminder.id} to {reminder.recipient_email}")
@@ -156,10 +173,35 @@ def send_dynamic_rent_status_email(lease):
             extra_context=extra_context
         )
         
+        # --- TELEGRAM NOTIFICATION ---
+        if tenant.telegram_chat_id:
+            tg_body = f"Dear {tenant.first_name},\n"
+            tg_body += f"This is your consolidated statement for <b>{lease.property.name}</b> as of {today.strftime('%b %d, %Y')}.\n\n"
+            
+            # Simple Table using Monospace (pre)
+            tg_body += "<pre>"
+            tg_body += f"{'Date':<12} {'Due':>8} {'Paid':>8} {'Bal':>8}\n"
+            tg_body += "-" * 40 + "\n"
+            for obs in unpaid_obligations:
+                date_str = obs.due_date.strftime('%b %d')
+                tg_body += f"{date_str:<12} {float(obs.expected_amount):>8.2f} {float(obs.amount_paid):>8.2f} {float(obs.outstanding_amount):>8.2f}\n"
+            tg_body += "-" * 40 + "\n"
+            tg_body += f"{'TOTAL DUE':<28} ${total_due:>8.2f}\n"
+            tg_body += "</pre>\n\n"
+            
+            tg_body += "<i>Please arrange payment promptly. Thank you!</i>"
+            
+            styled_tg_msg = format_styled_telegram_message(
+                title="Rent Status Update",
+                body=tg_body
+            )
+            
+            send_telegram_message(tenant.telegram_chat_id, styled_tg_msg)
+
         # Log the action
         AuditLog.objects.create(
             action='reminder_sent', # Still using this action code for consistency
-            description=f"Sent Dynamic Rent Status Email to {tenant.email} (Total: ${total_due:.2f})"
+            description=f"Sent Dynamic Rent Status Notification (Email & TG if applicable) to {tenant.email} (Total: ${total_due:.2f})"
         )
         return True, "Email sent successfully."
     except Exception as e:

@@ -161,3 +161,7 @@ EMAIL_BACKEND = 'gmailapi_backend.mail.GmailBackend'
 GMAIL_API_CLIENT_ID = os.environ.get('GMAIL_API_CLIENT_ID', '')
 GMAIL_API_CLIENT_SECRET = os.environ.get('GMAIL_API_CLIENT_SECRET', '')
 GMAIL_API_REFRESH_TOKEN = os.environ.get('GMAIL_API_REFRESH_TOKEN', '')
+# ─── Telegram Bot ──────────────
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/"
+TELEGRAM_INTERNAL_SECRET = os.environ.get('TELEGRAM_INTERNAL_SECRET', 'proprms_bot_secret_9d8ef2')
