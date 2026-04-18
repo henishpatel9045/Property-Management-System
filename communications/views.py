@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from properties.models import Tenant
-from .utils import process_pending_reminders, run_all_dynamic_rent_reminders
+from .utils import process_pending_reminders, run_all_dynamic_rent_reminders, get_pending_whatsapp_reminders
 from .telegram_service import send_telegram_message
 
 logger = logging.getLogger(__name__)
@@ -105,4 +105,31 @@ def cron_trigger_reminders(request):
             'error_count': dyn_error,
         },
         'total_sent': sent_count + dyn_sent
+    })
+
+@csrf_exempt
+def get_whatsapp_reminders_view(request):
+    """
+    Secure endpoint for the standalone listener to fetch WhatsApp reminders.
+    Requires a POST request with the internal secret.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        secret = data.get('secret')
+    except (json.JSONDecodeError, AttributeError):
+        secret = request.POST.get('secret')
+
+    if not secret or secret != settings.TELEGRAM_INTERNAL_SECRET:
+        logger.warning("Unauthorized WhatsApp reminder fetch attempt.")
+        return JsonResponse({'error': 'Unauthorized.'}, status=403)
+
+    reminders = get_pending_whatsapp_reminders()
+    
+    return JsonResponse({
+        'status': 'success',
+        'count': len(reminders),
+        'reminders': reminders
     })

@@ -246,5 +246,90 @@ def run_all_dynamic_rent_reminders():
             else:
                 error_count += 1
                 logger.error(f"Error sending dynamic rent to {lease.tenant.email}: {message}")
+
+def format_styled_whatsapp_message(title, body, footer=None):
+    """
+    Formats a message for WhatsApp with consistent PropRMS styling.
+    Uses WhatsApp markdown (*bold*, _italic_, ```monospace```).
+    """
+    company_name = getattr(settings, 'COMPANY_NAME', 'PropRMS')
+    today = timezone.localtime().strftime('%b %d, %Y')
+    
+    msg = f"🏢 *{company_name} | {title}*\n"
+    msg += f"📅 _{today}_\n"
+    msg += "─" * 20 + "\n\n"
+    msg += body + "\n\n"
+    msg += "─" * 20 + "\n"
+    
+    if footer:
+        msg += f"_{footer}_\n"
+    else:
+        msg += f"_Regards,_\n_{company_name} Management_"
+        
+    return msg
+
+
+def get_pending_whatsapp_reminders():
+    """
+    Gather everything that needs sending via WhatsApp.
+    Currently focused on dynamic rent status reminders.
+    Returns: List of {"phone": str, "message": str}
+    """
+    from properties.models import Lease
+    from finance.models import RentObligation
+    import datetime
+
+    today = timezone.localtime().date()
+    active_leases = Lease.objects.filter(status='active').select_related('tenant', 'property')
+    
+    reminders = []
+    
+    for lease in active_leases:
+        tenant = lease.tenant
+        if not tenant.phone_number:
+            continue
+            
+        unpaid_obligations = RentObligation.objects.filter(
+            lease=lease,
+            status__in=['unpaid', 'partial', 'adjusted'],
+            due_date__lte=today
+        ).order_by('due_date')
+
+        if not unpaid_obligations.exists():
+            continue
+
+        total_due = sum(obs.outstanding_amount for obs in unpaid_obligations)
+        
+        # Build Body
+        body = f"Dear {tenant.first_name},\n"
+        body += f"This is your consolidated statement for *{lease.property.name}* as of {today.strftime('%b %d, %Y')}.\n\n"
+        
+        # WhatsApp Mobile-Friendly List (replacing strict table)
+        for obs in unpaid_obligations:
+            date_str = obs.due_date.strftime('%b %d, %Y')
+            body += f"• *{date_str}*: ${float(obs.outstanding_amount):.2f} due "
+            if obs.amount_paid > 0:
+                body += f"_(Paid: ${float(obs.amount_paid):.2f})_\n"
+            else:
+                body += "\n"
+        
+        body += f"\n💰 *TOTAL OUTSTANDING: ${total_due:.2f}*\n\n"
+        
+        body += "_Please arrange payment promptly. Thank you!_"
+        
+        styled_msg = format_styled_whatsapp_message(
+            title="Rent Status Update",
+            body=body
+        )
+        
+        # Clean phone number (remove +, spaces)
+        clean_phone = str(tenant.phone_number).replace('+', '').replace(' ', '').strip()
+        
+        # Basic sanity check
+        if len(clean_phone) >= 10:
+            reminders.append({
+                "phone": f"+{clean_phone}", # Ensure + is there for WhatsApp
+                "message": styled_msg
+            })
                 
-    return sent_count, skipped_count, error_count
+    return reminders

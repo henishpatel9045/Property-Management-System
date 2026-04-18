@@ -125,3 +125,13 @@ token.json
 
 # extras
 ignore/*
+
+# Playwright
+playwright-report/
+playwright-video/
+
+# whatsapp
+whatsapp_auth/
+
+# error screenshots
+error_*.png
