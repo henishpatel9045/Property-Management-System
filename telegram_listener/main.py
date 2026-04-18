@@ -2,11 +2,7 @@ import os
 import json
 import logging
 import requests
-import threading
-from pytz import timezone
-from datetime import time
 from dotenv import load_dotenv
-from whatsapp_sender import run_sender
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import (
     ApplicationBuilder,
@@ -96,14 +92,6 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "If you want to register for rent reminders, please use the /start command."
     )
 
-def whatsapp_reminder_job(context: ContextTypes.DEFAULT_TYPE):
-    """Background job triggered by the scheduler to run WhatsApp reminders."""
-    logger.info("Triggering scheduled WhatsApp reminders (Saturday 8PM Adelaide Time)...")
-    # Run in a separate thread to avoid blocking the main async bot loop
-    thread = threading.Thread(target=run_sender, kwargs={'login_only': False})
-    thread.daemon = True
-    thread.start()
-
 if __name__ == '__main__':
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_INTERNAL_SECRET or not WEBSITE_URL:
         logger.error("Missing environment variables. Check your .env file.")
@@ -117,14 +105,5 @@ if __name__ == '__main__':
     application.add_handler(MessageHandler(filters.CONTACT, handle_contact))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), unknown))
     
-    # Setup Scheduling (Saturday at 8:00 PM Adelaide Time)
-    adelaide_tz = timezone('Australia/Adelaide')
-    # days=(5,) corresponds to Saturday (0=Mon, 5=Sat)
-    application.job_queue.run_daily(
-        whatsapp_reminder_job, 
-        time=time(20, 0, tzinfo=adelaide_tz), 
-        days=(5,)
-    )
-    
-    logger.info("Bot listener started with WhatsApp scheduler (Sat 8PM Adelaide time)...")
+    logger.info("Bot listener started (Standalone mode)...")
     application.run_polling()

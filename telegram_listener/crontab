@@ -1,0 +1,4 @@
+# PropRMS WhatsApp Reminders Cron Job
+# Run every Saturday at 8:00 PM (20:00) 
+# Note: /etc/environment is sourced to ensure API keys are available to the script
+0 20 * * 6 . /etc/environment; /usr/local/bin/python /app/whatsapp_sender.py --trigger >> /var/log/cron.log 2>&1
