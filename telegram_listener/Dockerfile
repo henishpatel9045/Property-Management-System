@@ -41,4 +41,4 @@ RUN chmod 0644 /etc/cron.d/whatsapp-cron && \
 
 # Setup Entrypoint
 RUN chmod +x entrypoint.sh
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]
