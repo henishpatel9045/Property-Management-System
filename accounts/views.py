@@ -73,7 +73,7 @@ def get_google_oauth_flow(request):
         "openid",
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/userinfo.profile",
-        "https://www.googleapis.com/auth/drive"
+        "https://www.googleapis.com/auth/drive.file"
     ]
     flow = google_auth_oauthlib.flow.Flow.from_client_config(client_config, scopes=scopes)
     return flow
@@ -95,7 +95,6 @@ def google_login(request):
     
     authorization_url, state = flow.authorization_url(
         access_type='offline',
-        include_granted_scopes='true',
         prompt='consent'
     )
     request.session['state'] = state

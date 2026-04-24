@@ -131,6 +131,11 @@
                 {% block content %}{% endblock %}
             </div>
             <footer class="mt-auto py-3 text-center text-muted small border-top">
+                <div class="mb-2">
+                    <a href="{% url 'privacy_policy' %}" class="text-decoration-none text-muted mx-2">Privacy Policy</a>
+                    |
+                    <a href="{% url 'terms_conditions' %}" class="text-decoration-none text-muted mx-2">Terms & Conditions</a>
+                </div>
                 &copy; {% now "Y" %} PropertyMaps RMS. All rights reserved.
             </footer>
         </div>
