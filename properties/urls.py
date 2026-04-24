@@ -19,4 +19,5 @@ urlpatterns = [
 
     path('documents/<int:pk>/download/', views.download_lease_document, name='download_lease_document'),
     path('documents/<int:pk>/delete/', views.delete_lease_document, name='delete_lease_document'),
+    path('documents/<int:pk>/thumbnail/', views.document_thumbnail_view, name='document_thumbnail'),
 ]

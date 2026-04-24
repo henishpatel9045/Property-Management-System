@@ -95,7 +95,9 @@
                     {% for doc in documents %}
                     <div class="col-md-6 col-lg-4">
                         <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
-                            <i class="bi bi-cloud-check fs-2 text-primary me-3"></i>
+                            <div class="me-3" style="width: 60px; height: 60px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #e9ecef; border-radius: 8px;">
+                                <img src="{% url 'document_thumbnail' doc.id %}" alt="Preview" style="max-width: 100%; max-height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/124/124837.png';">
+                            </div>
                             <div class="flex-grow-1 text-truncate">
                                 <p class="mb-0 fw-medium text-truncate" title="{{ doc.drive_file_name }}">{{ doc.drive_file_name }}</p>
                                 <small class="text-muted">Added {{ doc.uploaded_at|date:"M d, Y" }}</small>

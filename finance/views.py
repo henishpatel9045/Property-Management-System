@@ -17,8 +17,23 @@ from django.db import transaction
 from django.http import StreamingHttpResponse
 from propertymaps.gdrive_service import (
     upload_file_to_drive, download_file_stream, delete_file_from_drive,
-    DriveQuotaExceededError, GoogleAuthRevokedError
+    get_file_thumbnail_link, DriveQuotaExceededError, GoogleAuthRevokedError
 )
+from django.http import HttpResponse, StreamingHttpResponse, HttpResponseRedirect
+
+# ... (middle of file)
+
+@login_required
+def financial_attachment_thumbnail_view(request, pk):
+    record = get_object_or_404(FinancialRecord, pk=pk, property__owner=request.user)
+    if not record.drive_file_id:
+        return redirect('static/img/default-file-icon.png')
+        
+    thumbnail_link = get_file_thumbnail_link(request.user, record.drive_file_id)
+    if thumbnail_link:
+        return HttpResponseRedirect(thumbnail_link)
+    
+    return redirect('static/img/default-file-icon.png')
 
 
 from finance.models import RentObligation, Payment, PaymentAllocation, FinancialRecord, BondAccount

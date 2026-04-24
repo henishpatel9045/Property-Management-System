@@ -113,3 +113,17 @@ def delete_file_from_drive(user, file_id):
         # Ignore if file is already deleted or not found
         if error.status_code != 404:
             raise error
+
+def get_file_thumbnail_link(user, file_id):
+    """
+    Fetches the thumbnail link for a Google Drive file.
+    Note: These links are usually short-lived.
+    """
+    if not file_id:
+        return None
+    try:
+        service = get_drive_service(user)
+        file_metadata = service.files().get(fileId=file_id, fields='thumbnailLink').execute()
+        return file_metadata.get('thumbnailLink')
+    except Exception:
+        return None

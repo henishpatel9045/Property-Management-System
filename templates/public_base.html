@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,25 +20,31 @@
             flex-direction: column;
             min-height: 100vh;
         }
+
         .navbar-brand {
             font-weight: 700;
         }
+
         .main-content {
             flex: 1;
         }
+
         .footer {
             background-color: #1e293b;
             color: #fff;
         }
+
         .footer a {
-            color: rgba(255,255,255,0.7);
+            color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
         }
+
         .footer a:hover {
             color: #fff;
         }
     </style>
 </head>
+
 <body>
     <!-- Top Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background: #1e293b;">
@@ -45,10 +52,12 @@
             <a class="navbar-brand" href="{% url 'home' %}">
                 <i class="bi bi-buildings-fill me-2"></i>PropRMS
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#publicNavbar" aria-controls="publicNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#publicNavbar" aria-controls="publicNavbar" aria-expanded="false"
+                aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
+
             <div class="collapse navbar-collapse" id="publicNavbar">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
@@ -71,16 +80,16 @@
     <!-- Main Content -->
     <main class="main-content">
         {% if messages %}
-            <div class="container mt-4">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
+        <div class="container mt-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+            {% endfor %}
+        </div>
         {% endif %}
-        
+
         {% block content %}{% endblock %}
     </main>
 
@@ -94,14 +103,17 @@
                 </div>
                 <div class="col-md-4 mb-3 mb-md-0">
                     <ul class="list-inline mb-0">
-                        <li class="list-inline-item"><a href="{% url 'privacy_policy' %}" class="small">Privacy Policy</a></li>
+                        <li class="list-inline-item"><a href="{% url 'privacy_policy' %}" class="small">Privacy
+                                Policy</a></li>
                         <li class="list-inline-item text-white-50 mx-2">|</li>
-                        <li class="list-inline-item"><a href="{% url 'terms_conditions' %}" class="small">Terms & Conditions</a></li>
+                        <li class="list-inline-item"><a href="{% url 'terms_conditions' %}" class="small">Terms &
+                                Conditions</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4 text-md-end text-white-50 small">
                     &copy; {% now "Y" %} PropertyMaps RMS. All rights reserved.<br>
-                    Made by <a href="https://www.instagram.com/henishpatel" target="_blank" rel="noopener noreferrer">Henish Patel</a>
+                    Made by <a href="https://www.instagram.com/henish.patel.77/" target="_blank"
+                        rel="noopener noreferrer">Henish Patel</a>
                 </div>
             </div>
         </div>
@@ -110,4 +122,5 @@
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

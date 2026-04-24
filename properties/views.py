@@ -8,12 +8,27 @@ from finance.models import FinancialRecord, RentObligation
 from django.db.models import Sum
 from propertymaps.gdrive_service import (
     upload_file_to_drive, download_file_stream, delete_file_from_drive,
-    DriveQuotaExceededError, GoogleAuthRevokedError
+    get_file_thumbnail_link, DriveQuotaExceededError, GoogleAuthRevokedError
 )
 from django.contrib import messages
-from django.http import StreamingHttpResponse
+from django.http import StreamingHttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
+
+@login_required
+def document_thumbnail_view(request, pk):
+    doc = get_object_or_404(Document, pk=pk, lease__property__owner=request.user)
+    if not doc.drive_file_id:
+        return redirect('static/img/default-file-icon.png')
+        
+    thumbnail_link = get_file_thumbnail_link(request.user, doc.drive_file_id)
+    if thumbnail_link:
+        # thumbnailLink usually ends with =s220 (size 220). We can increase it if needed.
+        # But for thumbnails, the default is usually fine.
+        return HttpResponseRedirect(thumbnail_link)
+    
+    # Fallback to a generic icon if no thumbnail is available (e.g. for non-image/non-pdf files)
+    return redirect('static/img/default-file-icon.png')
 
 # --- Property Views ---
 class PropertyListView(LoginRequiredMixin, ListView):

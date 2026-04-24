@@ -29,8 +29,16 @@
                 </div>
 
                 {% if record.drive_file_id %}
-                <div class="alert alert-warning text-start">
-                    <i class="bi bi-info-circle-fill me-2"></i> This record has a file attached to it (<strong>{{ record.drive_file_name }}</strong>). Deleting the record will also <strong>permanently delete the file from your Google Drive.</strong>
+                <div class="alert alert-warning text-start mb-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-3" style="width: 60px; height: 60px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 8px;">
+                            <img src="{% url 'financial_record_thumbnail' record.id %}" alt="Preview" style="max-width: 100%; max-height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/124/124837.png';">
+                        </div>
+                        <div class="flex-grow-1">
+                            <i class="bi bi-info-circle-fill me-2"></i> This record has a file attached to it (<strong>{{ record.drive_file_name }}</strong>).
+                        </div>
+                    </div>
+                    <p class="mb-0 small">Deleting the record will also <strong>permanently delete the file from your Google Drive.</strong></p>
                 </div>
                 {% endif %}
 
