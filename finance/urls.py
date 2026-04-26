@@ -18,6 +18,7 @@ urlpatterns = [
     path('records/<int:pk>/', views.financial_record_detail, name='financial_record_detail'),
     path('records/<int:pk>/edit/', views.financial_record_update, name='financial_record_update'),
     path('records/<int:pk>/delete/', views.financial_record_delete, name='financial_record_delete'),
+    path('records/<int:pk>/revert/', views.revert_financial_record, name='revert_financial_record'),
     path('records/<int:pk>/download/', views.download_financial_attachment, name='download_financial_attachment'),
     path('records/<int:pk>/thumbnail/', views.financial_attachment_thumbnail_view, name='financial_record_thumbnail'),
 

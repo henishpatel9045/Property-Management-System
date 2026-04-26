@@ -152,6 +152,9 @@
                             <a href="{% url 'financial_record_update' rec.id %}" class="btn btn-sm btn-light border" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
+                            <a href="{% url 'revert_financial_record' rec.id %}" class="btn btn-sm btn-outline-warning" title="Revert Entry">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </a>
                         </td>
                     </tr>
                     {% empty %}

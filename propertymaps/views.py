@@ -35,3 +35,5 @@ def privacy_policy(request):
 
 def terms_conditions(request):
     return render(request, 'terms.html')
+def user_guide(request):
+    return render(request, 'guide.html')

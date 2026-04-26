@@ -1,0 +1,320 @@
+{% extends 'public_base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .guide-nav {
+        position: sticky;
+        top: 2rem;
+        height: calc(100vh - 4rem);
+        overflow-y: auto;
+    }
+
+    .guide-section {
+        padding-top: 2rem;
+        margin-bottom: 4rem;
+    }
+
+    .screenshot-placeholder {
+        background: #f1f5f9;
+        border: 2px dashed #cbd5e1;
+        border-radius: 1rem;
+        height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        margin: 1.5rem 0;
+    }
+
+    .step-badge {
+        width: 32px;
+        height: 32px;
+        background: #1e293b;
+        color: white;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .nav-pills .nav-link {
+        color: #64748b;
+        border-radius: 0.5rem;
+    }
+
+    .nav-pills .nav-link.active {
+        background-color: #1e293b;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="guide-nav">
+                <h5 class="fw-bold mb-3">User Guide</h5>
+                <nav id="guide-sidebar" class="nav nav-pills flex-column">
+                    <a class="nav-link active" href="#getting-started">Getting Started</a>
+                    <a class="nav-link" href="#oauth-setup">1. Google Drive Setup</a>
+                    <a class="nav-link" href="#properties">2. Property Setup</a>
+                    <a class="nav-link" href="#tenants">3. Tenant Onboarding</a>
+                    <a class="nav-link" href="#telegram">4. Linking Telegram</a>
+                    <a class="nav-link" href="#leases">5. Creating Leases</a>
+                    <a class="nav-link" href="#finances">6. Financials & Exports</a>
+                    <a class="nav-link" href="#ledger">7. Rent Ledger</a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="d-flex align-items-center mb-4">
+                <i class="bi bi-journal-text fs-1 text-primary me-3"></i>
+                <div>
+                    <h1 class="display-5 fw-bold mb-0">Mastering PropRMS</h1>
+                    <p class="lead text-muted">A step-by-step guide to automating your property portfolio.</p>
+                </div>
+            </div>
+
+            <!-- Section: Getting Started -->
+            <section id="getting-started" class="guide-section">
+                <h3 class="fw-bold mb-4">Introduction</h3>
+                <p>PropRMS is designed to remove the manual burden of property management. By following this guide, you
+                    will set up a system that automatically tracks rent, manages documents, and communicates with your
+                    tenants.</p>
+                <div class="mb-4">
+                    <img src="{% static 'guide/dashboard.png' %}" class="img-fluid rounded-4 shadow-sm border"
+                        alt="Dashboard Overview">
+                </div>
+            </section>
+
+            <!-- Section: OAuth Setup -->
+            <section id="oauth-setup" class="guide-section border-top">
+                <h3 class="fw-bold mt-4"><span class="step-badge">1</span> Google Drive Integration</h3>
+                <p>To ensure your data remains under your control, PropRMS uses your personal Google Drive for document storage. <strong>This is a mandatory step</strong> that you will be prompted to complete the first time you attempt to access your dashboard.</p>
+                <div class="card bg-light border-0 mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold"><i class="bi bi-shield-check text-primary me-2"></i>First-Time Setup:</h6>
+                        <ol class="mb-0">
+                            <li>Upon your first login, you will be redirected to the Google Authorization page.</li>
+                            <li>Sign in with your preferred Google Account.</li>
+                            <li>Grant permission for <code>drive.file</code> access.</li>
+                            <li>Once authorized, you will be granted full access to the PropRMS dashboard.</li>
+                        </ol>
+                        <p class="small text-muted mt-2 mb-0"><strong>Privacy Note:</strong> We only access folders and files created by this app. Your personal Drive content remains strictly private.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Properties -->
+            <section id="properties" class="guide-section border-top">
+                <h3 class="fw-bold mt-4"><span class="step-badge">2</span> Property Setup</h3>
+                <p>Properties act as "containers" for your tenants and financial records. To add a property:</p>
+                <ul>
+                    <li>Navigate to <strong>Properties</strong> > <strong>Add Property</strong>.</li>
+                    <li>Enter a <strong>Nickname</strong> (e.g., "Unit 42 - Skyline") and the <strong>Full
+                            Address</strong>.</li>
+                    <li>Add optional notes for your reference.</li>
+                </ul>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <img src="{% static 'guide/property1.png' %}" class="img-fluid rounded shadow-sm border"
+                            alt="Property List">
+                    </div>
+                    <div class="col-md-6">
+                        <img src="{% static 'guide/property2.png' %}" class="img-fluid rounded shadow-sm border"
+                            alt="Add Property Form">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Tenant Onboarding -->
+            <section id="tenants" class="guide-section border-top">
+                <h3 class="fw-bold mt-4"><span class="step-badge">3</span> Tenant Onboarding</h3>
+                <p>Adding a tenant correctly is vital for automated communications and Telegram linking.</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Crucial:</strong> Phone numbers MUST include the country code. For Australia, start with
+                    <code>+61</code> (e.g., <code>+61400000000</code>).
+                </div>
+                <h6 class="fw-bold">Steps:</h6>
+                <ol>
+                    <li>Go to <strong>Tenants</strong> > <strong>Add Tenant</strong>.</li>
+                    <li>Enter their full name and a valid email address.</li>
+                    <li>Enter their <strong>Mobile Number</strong> in international format.</li>
+                </ol>
+                <div class="mb-4">
+                    <img src="{% static 'guide/tenant.png' %}" class="img-fluid rounded-4 shadow-sm border"
+                        alt="Tenant Profile Form">
+                </div>
+            </section>
+
+            <!-- Section: Telegram linking -->
+            <section id="telegram" class="guide-section border-top">
+                <h3 class="fw-bold mt-4"><span class="step-badge">4</span> Linking Telegram Reminders</h3>
+                <p>Automate your reminders by linking your tenants to the PropRMS Telegram Bot.</p>
+
+                <div class="card mb-4 shadow-sm border-0 bg-light">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-primary mb-3">The 5-Step Linking Flow:</h6>
+                        <div class="d-flex mb-3">
+                            <div class="me-3 text-primary"><i class="bi bi-1-circle-fill fs-4"></i></div>
+                            <div><strong>Share the Bot:</strong> Share this link with your tenant: <a
+                                    href="https://t.me/PropRMSBot" target="_blank"
+                                    class="fw-bold">https://t.me/PropRMSBot</a></div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="me-3 text-primary"><i class="bi bi-2-circle-fill fs-4"></i></div>
+                            <div><strong>Tenant Start:</strong> The tenant opens the bot and clicks the
+                                <strong>Start</strong> button.
+                            </div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="me-3 text-primary"><i class="bi bi-3-circle-fill fs-4"></i></div>
+                            <div><strong>Identity Verification:</strong> The tenant clicks the <strong>"Share My
+                                    Contact"</strong> button within the bot.</div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="me-3 text-primary"><i class="bi bi-4-circle-fill fs-4"></i></div>
+                            <div><strong>Automatic Matching:</strong> PropRMS looks at the shared number. If it matches
+                                the <code>+61...</code> number you entered in Step 3, the account is linked!</div>
+                        </div>
+                        <div class="d-flex">
+                            <div class="me-3 text-primary"><i class="bi bi-5-circle-fill fs-4"></i></div>
+                            <div><strong>Confirmation:</strong> The tenant receives a "Successfully Linked" message and
+                                will now get automated rent reminders.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-4 text-center">
+                    <img src="{% static 'guide/telegram-bot.jpeg' %}" class="img-fluid rounded-4 shadow-sm border"
+                        alt="Telegram Bot Interaction" style="max-height: 500px;">
+                </div>
+            </section>
+
+            <!-- Section: Leases -->
+            <section id="leases" class="guide-section border-top">
+                <h3 class="fw-bold mt-4"><span class="step-badge">5</span> Creating Leases</h3>
+                <p>The Lease connects a Tenant to a Property and sets the financial rules.</p>
+                <ul>
+                    <li><strong>Rent Amount & Frequency:</strong> Set how much and how often (Weekly, Fortnightly,
+                        Monthly).</li>
+                    <li><strong>Due Day:</strong> Specify the day (e.g., "1" for the 1st of the month, or "1" for
+                        Monday).</li>
+                    <li><strong>Document Upload:</strong> Drag and drop the signed PDF. It will be instantly filed in
+                        your Google Drive.</li>
+                </ul>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <img src="{% static 'guide/lease1.png' %}" class="img-fluid rounded shadow-sm border mb-2"
+                            alt="Lease Setup">
+                        <img src="{% static 'guide/lease2.png' %}" class="img-fluid rounded shadow-sm border"
+                            alt="Lease Frequency">
+                    </div>
+                    <div class="col-md-6">
+                        <img src="{% static 'guide/lease3.png' %}" class="img-fluid rounded shadow-sm border mb-2"
+                            alt="Lease Documents">
+                        <img src="{% static 'guide/lease4.png' %}" class="img-fluid rounded shadow-sm border"
+                            alt="Document Previews">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Finances -->
+            <section id="finances" class="guide-section border-top">
+                <h3 class="fw-bold mt-4"><span class="step-badge">6</span> Financials & Data Export</h3>
+                <p>PropRMS allows you to take your data with you. You can track all income and expenses and export them
+                    for your accountant.</p>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="fw-bold"><i class="bi bi-file-earmark-excel text-success me-2"></i>Excel
+                                    Export</h6>
+                                <p class="small text-muted">Navigate to the <strong>Rent Ledger</strong> and click
+                                    "Export to Excel" to download a full history.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="fw-bold"><i class="bi bi-file-earmark-spreadsheet text-info me-2"></i>CSV
+                                    Export</h6>
+                                <p class="small text-muted">In the <strong>Financial Records</strong> list, click
+                                    "Export CSV" for categorized income/expenses.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm border-start border-warning border-4">
+                            <div class="card-body">
+                                <h6 class="fw-bold"><i class="bi bi-arrow-counterclockwise text-warning me-2"></i>Revert
+                                    Entry</h6>
+                                <p class="small text-muted">Use the "Revert" button to undo an entry. If it's a rent
+                                    payment, it will also automatically update the Rent Ledger.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <img src="{% static 'guide/finance.png' %}" class="img-fluid rounded-4 shadow-sm border"
+                        alt="Financial Records List">
+                </div>
+            </section>
+
+            <!-- Section: Rent Ledger -->
+            <section id="ledger" class="guide-section border-top">
+                <h3 class="fw-bold mt-4"><span class="step-badge">7</span> Understanding the Ledger</h3>
+                <p>The Ledger is where you track the "Health" of your property. Each row represents a rent period. You
+                    can:</p>
+                <ul>
+                    <li><strong>Mark Paid:</strong> Record a payment. It will automatically update the tenant's balance.
+                    </li>
+                    <li><strong>Adjustments:</strong> If you give a discount or add a fee, use the "Adjust" feature.
+                    </li>
+                    <li><strong>Revert:</strong> Made a mistake? Click Revert to undo the payment and restore the
+                        arrears.</li>
+                </ul>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-12">
+                        <img src="{% static 'guide/rent-ledger.png' %}" class="img-fluid rounded shadow-sm border mb-3"
+                            alt="Full Rent Ledger">
+                    </div>
+                    <div class="col-md-4">
+                        <img src="{% static 'guide/rent-ledger2.png' %}" class="img-fluid rounded shadow-sm border"
+                            alt="Ledger Filters">
+                    </div>
+                    <div class="col-md-4">
+                        <img src="{% static 'guide/rent-ledger3.png' %}" class="img-fluid rounded shadow-sm border"
+                            alt="Payment Recording">
+                    </div>
+                    <div class="col-md-4">
+                        <img src="{% static 'guide/rent-ledge4.png' %}" class="img-fluid rounded shadow-sm border"
+                            alt="Arrears Tracking">
+                    </div>
+                </div>
+            </section>
+
+            <footer class="mt-5 pt-5 text-center text-muted border-top">
+                <p>System developed by <strong>Henish Patel</strong><br>
+                    For technical support, please contact <a
+                        href="mailto:henish.patel.au@gmail.com">henish.patel.au@gmail.com</a></p>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize scrollspy
+    document.addEventListener('DOMContentLoaded', function () {
+        var scrollSpy = new bootstrap.ScrollSpy(document.body, {
+            target: '#guide-sidebar',
+            offset: 100
+        });
+    });
+</script>
+{% endblock %}

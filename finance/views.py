@@ -280,6 +280,63 @@ class PaymentCreateView(LoginRequiredMixin, CreateView):
         allocate_payment(self.object)
         return response
 
+@login_required
+@transaction.atomic
+def revert_financial_record(request, pk):
+    record = get_object_or_404(
+        FinancialRecord, pk=pk, property__owner=request.user
+    )
+    
+    # If this is a rent payment linked to an obligation, we use the ledger revert logic
+    obligation = record.rent_obligation
+    
+    if request.method == 'POST':
+        if obligation:
+            # 1. Find the payment that created this record
+            # We look for a payment on the same date/amount for this lease
+            payment = Payment.objects.filter(
+                lease=record.lease,
+                date_paid=record.date,
+                amount=record.amount
+            ).order_by('-created_at').first()
+            
+            if payment:
+                affected_obligations = list(RentObligation.objects.filter(allocations__payment=payment).distinct())
+                
+                # Delete Payment (Allocations will cascade)
+                payment.delete()
+                
+                # Recalculate affected obligations
+                for obs in affected_obligations:
+                    obs.refresh_from_db()
+                    total_allocated = obs.allocations.aggregate(total=Sum('amount_allocated'))['total'] or 0
+                    obs.amount_paid = total_allocated
+                    
+                    if obs.amount_paid <= 0:
+                        obs.status = 'unpaid'
+                    elif obs.amount_paid < obs.expected_amount:
+                        obs.status = 'partial'
+                    else:
+                        obs.status = 'paid'
+                    obs.save()
+
+        # 2. Handle Google Drive Attachment deletion if exists
+        if record.drive_file_id:
+            try:
+                delete_file_from_drive(request.user, record.drive_file_id)
+            except Exception:
+                pass
+
+        # 3. Delete the financial record itself
+        record.delete()
+        
+        messages.success(request, f"Financial record '{record.category}' for ${record.amount} has been reverted.")
+        return redirect('financial_list')
+        
+    return render(request, 'finance/revert_financial_confirm.html', {
+        'record': record,
+        'is_rent_payment': obligation is not None
+    })
 
 # ─────────────────────────────────────────────
 # FINANCIAL RECORDS (Unified Income + Expense)
@@ -502,7 +559,9 @@ def lease_settlement(request, pk):
     lease = get_object_or_404(Lease, pk=pk, property__owner=request.user)
 
     unpaid_obligations = RentObligation.objects.filter(
-        lease=lease, status__in=['unpaid', 'partial', 'adjusted']
+        lease=lease, 
+        status__in=['unpaid', 'partial', 'adjusted'],
+        due_date__lte=date.today()
     )
     total_arrears = sum(obs.outstanding_amount for obs in unpaid_obligations)
 
@@ -536,7 +595,9 @@ def finalize_settlement(request, pk):
 
         # Recalculate final balance
         unpaid_obligations = RentObligation.objects.filter(
-            lease=lease, status__in=['unpaid', 'partial', 'adjusted']
+            lease=lease, 
+            status__in=['unpaid', 'partial', 'adjusted'],
+            due_date__lte=date.today()
         )
         total_arrears = sum(obs.outstanding_amount for obs in unpaid_obligations)
         deductible_records = FinancialRecord.objects.filter(
@@ -577,7 +638,9 @@ def send_settlement_email(request, pk):
 
         # Recalculate for email
         unpaid_obligations = RentObligation.objects.filter(
-            lease=lease, status__in=['unpaid', 'partial', 'adjusted']
+            lease=lease, 
+            status__in=['unpaid', 'partial', 'adjusted'],
+            due_date__lte=date.today()
         )
         total_arrears = sum(obs.outstanding_amount for obs in unpaid_obligations)
         deductible_records = FinancialRecord.objects.filter(
